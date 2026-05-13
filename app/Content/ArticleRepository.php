@@ -8,7 +8,6 @@ use App\Support\EditLog;
 use App\Support\HtmlCache;
 use App\Support\Markdown;
 use App\Support\ImageResolver;
-use App\Support\YamlHelper;
 use DateTimeImmutable;
 use DateTimeZone;
 use RuntimeException;
@@ -703,7 +702,7 @@ final class ArticleRepository implements ContentRepositoryInterface
             return [];
         }
 
-        $result = YamlHelper::parse($content);
+        $result = FrontMatter::parse($content);
 
         // Parse FAQ separately (special format: - q: "..." a: "...")
         if (preg_match_all('/- q: "([^"]+)"\s+a: "([^"]+)"/', $content, $faqMatches, PREG_SET_ORDER)) {

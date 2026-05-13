@@ -4,6 +4,38 @@ All notable changes to Bird CMS are documented here. Format is loosely based on
 [Keep a Changelog](https://keepachangelog.com/), versioning follows
 [SemVer](https://semver.org/).
 
+## [3.1.6] - 2026-05-12
+
+Hotfix: close silent-data-loss on nested fields in article meta.yaml.
+
+### Fixed
+
+- `ArticleRepository::parseMetaYaml` now reads via `FrontMatter::parse`
+  instead of `YamlHelper::parse` (which delegated to `YamlMini`, the
+  flat-only minimal parser). The save path already used
+  `FrontMatter::encode`, so nested mappings persisted correctly but were
+  lost on the next read — an asymmetric pipeline that silently truncated
+  `features:`, `faq:`, and similar block-arrays of objects to a list of
+  the outer keys only.
+
+  Concrete symptom: a meta.yaml with
+  ```
+  features:
+    - title: X
+      text:  Y
+  ```
+  came back as `['title: X', ...]` with `text` dropped. After this fix
+  it round-trips intact.
+
+  `YamlHelper` / `YamlMini` are unchanged — they remain in use by
+  `mcp/server.php` (which bootstraps without the autoloader). The fix
+  is a one-line parser swap in `ArticleRepository::parseMetaYaml`; no
+  schema change, no admin contract change, no client-visible API change.
+
+  Found by the klim.expert maintainer while testing whether services
+  authored as a category inside `content/articles/services/` could
+  carry nested block arrays. They couldn't — same root cause.
+
 ## [3.1.5] - 2026-05-12
 
 Hotfix: remove install-guard auto-redirects.
