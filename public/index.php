@@ -22,15 +22,10 @@ if ($installUri === '/health') {
     return;
 }
 
-if (!file_exists($installLock)) {
-    if ($isInstallPath) {
-        require __DIR__ . '/install.php';
-        return;
-    }
-    header('Location: /install', true, 302);
-    return;
-}
-
+// Direct /install/* path access still serves the wizard, even after install
+// (the wizard handles its own idempotency: post-install rerun is gated by
+// install.php itself). No automatic redirect to /install when the lock is
+// missing — bootstrap.php fails loud below if the site is unconfigured.
 if ($isInstallPath) {
     require __DIR__ . '/install.php';
     return;

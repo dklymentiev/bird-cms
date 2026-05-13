@@ -7,15 +7,13 @@ declare(strict_types=1);
  *
  * All admin routes are handled here.
  *
- * Install guard: bootstrap.php refuses to boot without .env / config/app.php /
- * APP_KEY. On a fresh install those don't exist yet, so divert to the wizard
- * before requiring bootstrap.
+ * No install-guard redirect: on a fresh, unconfigured site bootstrap.php
+ * fails loud (APP_KEY refuse-to-boot check). Operators are expected to
+ * provision sites via scripts/install-site.sh; redirecting to /install at
+ * runtime was a holdover from the in-browser wizard era and broke the
+ * /admin endpoint on every site that had been migrated from earlier
+ * releases without an installed.lock present.
  */
-$installLock = dirname(__DIR__, 2) . '/storage/installed.lock';
-if (!file_exists($installLock)) {
-    header('Location: /install', true, 302);
-    return;
-}
 
 // Load bootstrap
 require_once dirname(__DIR__, 2) . '/bootstrap.php';
