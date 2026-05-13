@@ -1,0 +1,19 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Site categories. The install wizard materializes this file on a fresh
+ * install. Edit to add the categories your content needs.
+ *
+ * Each entry: slug => array with keys
+ *   title       (required) -- human-readable category name
+ *   description (optional) -- one-line description for category index pages
+ *   color       (optional) -- hex color for category chip styling
+ */
+return [
+    'general' => [
+        'title'       => 'General',
+        'description' => 'Default category for articles.',
+    ],
+];

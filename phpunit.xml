@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    PHPUnit configuration for Bird CMS.
+
+    Test suites:
+      unit         - pure-PHP repository / helper tests, no HTTP
+      integration  - admin controller flows exercised against tmp content dirs
+      mcp          - MCP server JSON-RPC handler coverage with golden fixtures
+      parity       - round-trip drift checks: MCP <-> admin must agree
+
+    Run all suites:    vendor/bin/phpunit
+    Run a single one:  vendor/bin/phpunit (with) testsuite=parity
+-->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+         colors="true"
+         stopOnFailure="false"
+         failOnRisky="true"
+         failOnWarning="true"
+         cacheDirectory=".phpunit.cache"
+         beStrictAboutOutputDuringTests="true">
+
+    <testsuites>
+        <testsuite name="unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="integration">
+            <directory>tests/Integration</directory>
+        </testsuite>
+        <testsuite name="mcp">
+            <directory>tests/Mcp</directory>
+        </testsuite>
+        <testsuite name="parity">
+            <directory>tests/Parity</directory>
+        </testsuite>
+    </testsuites>
+
+    <source>
+        <include>
+            <directory>app</directory>
+            <directory>mcp</directory>
+        </include>
+        <exclude>
+            <directory>tests</directory>
+            <directory>vendor</directory>
+        </exclude>
+    </source>
+
+    <php>
+        <env name="APP_KEY" value="phpunit-test-key-not-for-production-use-only"/>
+        <env name="DEBUG" value="false"/>
+        <env name="TRUSTED_PROXIES" value="127.0.0.1"/>
+    </php>
+</phpunit>

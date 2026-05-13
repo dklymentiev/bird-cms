@@ -1,0 +1,4 @@
+{
+  "name": "Default",
+  "description": "Default tailwind theme. Brand-agnostic by default: supply config('site.branding.logo_image') to swap the text-initials logo for an image, and ship public/assets/frontend/brand.css + site.css to override the visual identity. Slug stays `tailwind` for backward compatibility with existing ACTIVE_THEME settings."
+}

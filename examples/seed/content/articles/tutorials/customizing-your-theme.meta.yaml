@@ -1,0 +1,12 @@
+slug: customizing-your-theme
+title: "Customizing your theme"
+description: "Change colors, swap the logo, or build a fresh theme from scratch - all without touching the engine."
+category: tutorials
+date: 2026-04-29
+hero_image: /uploads/demo/article-1.svg
+type: tutorial
+status: published
+tags:
+  - theming
+  - customization
+  - css

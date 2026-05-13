@@ -1,0 +1,42 @@
+<?php
+/**
+ * Bird CMS — site config template.
+ *
+ * Copy to `config/app.php` and edit. The file is read once on every request,
+ * so keep it lean. Most identity fields can also be supplied via .env so the
+ * same config works for dev/staging/prod without per-environment edits.
+ *
+ * The Phase 1 onboarding wizard (alpha.15+) writes this file automatically.
+ * Until then, install-site.sh and docker-compose users copy it manually.
+ */
+declare(strict_types=1);
+
+$env = static fn(string $k): ?string => ($_ENV[$k] ?? getenv($k)) ?: null;
+
+return [
+    'site_name'        => $env('SITE_NAME')        ?? 'My Site',
+    'site_url'         => $env('SITE_URL')         ?? 'http://localhost:8080',
+    'site_description' => $env('SITE_DESCRIPTION') ?? '',
+    'timezone'         => $env('TIMEZONE')         ?? 'UTC',
+    'active_theme'     => $env('ACTIVE_THEME')     ?? 'tailwind',
+    'themes_path'      => ENGINE_THEMES_PATH,
+    'content_dir'      => SITE_CONTENT_PATH,
+    'articles_dir'     => SITE_CONTENT_PATH . '/articles',
+    'cache_dir'        => SITE_STORAGE_PATH . '/cache',
+
+    'theme' => [
+        'tailwind_cdn_url' => $env('TAILWIND_CDN_URL'),
+    ],
+
+    'seo' => [
+        'default_og_image' => $env('SEO_DEFAULT_OG_IMAGE'),
+        'title_separator'  => $env('SEO_TITLE_SEPARATOR') ?? '—',
+    ],
+
+    'logs' => [
+        // Read by SecurityController::blacklist() to render the auto-blacklist
+        // run history. The cron entry in docker/php/crontab writes here
+        // (see scripts/auto-blacklist.php redirect target).
+        'autoblock_log' => SITE_STORAGE_PATH . '/logs/cron-autoblock.log',
+    ],
+];

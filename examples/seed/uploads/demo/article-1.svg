@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" preserveAspectRatio="xMidYMid slice">
+  <rect width="1200" height="630" fill="#173847"/>
+  <polygon points="0,0 600,0 460,260 0,200" fill="#2dbb98"/>
+  <polygon points="600,0 1200,0 1200,180 760,180 460,260" fill="#13aa97"/>
+  <polygon points="0,200 460,260 360,420 0,440" fill="#0d3d36"/>
+  <polygon points="460,260 760,180 880,360 540,440 360,420" fill="#1c5a52"/>
+  <polygon points="540,440 880,360 1100,440 1200,440 1200,630 540,630" fill="#0a2520"/>
+  <polygon points="0,440 360,420 540,440 540,630 0,630" fill="#0d3d36"/>
+  <polygon points="760,180 1200,180 1200,440 1100,440 880,360" fill="#175b6a"/>
+  <circle cx="980" cy="280" r="58" fill="#f3c33b" opacity="0.85"/>
+  <polygon points="980,260 1010,300 950,300" fill="#0a2520" opacity="0.5"/>
+</svg>

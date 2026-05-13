@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bird-cms.com/schemas/article-meta.json",
+  "title": "Bird CMS Article Frontmatter",
+  "description": "Schema for the .meta.yaml file (or embedded YAML frontmatter) accompanying each Markdown article. Drives Schema.org generation, pillar-cluster interlinking, and admin UI.",
+  "type": "object",
+  "required": ["title", "description"],
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "description": "Article HTML title and Schema.org headline. Recommended ≤70 chars for SERP."
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 320,
+      "description": "Meta description and Schema.org description. 120–160 chars optimal for SERP."
+    },
+    "primary": {
+      "type": "string",
+      "description": "Primary keyword for pillar-cluster interlinking. Articles with the same primary cluster together."
+    },
+    "secondary": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Secondary keywords. Used for related-article scoring."
+    },
+    "category": {
+      "type": "string",
+      "description": "Category slug. Usually derived from the article path; explicit override allowed here."
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "hero_image": {
+      "type": "string",
+      "description": "Path to hero image relative to public/. Engine auto-resolves WebP variants. Required for Open Graph image."
+    },
+    "hero_image_alt": {
+      "type": "string",
+      "description": "Alt text for the hero image (accessibility + SEO)."
+    },
+    "author": {
+      "type": "string",
+      "description": "Author name. Maps to Schema.org Person."
+    },
+    "published_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp. Maps to Schema.org datePublished."
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Maps to Schema.org dateModified."
+    },
+    "schema_type": {
+      "type": "string",
+      "enum": ["article", "blog", "review", "comparison", "howto", "service", "area", "location", "faq"],
+      "description": "Drives which Schema.org markup is emitted. Defaults to 'article' if omitted."
+    },
+    "canonical": {
+      "type": "string",
+      "format": "uri",
+      "description": "Override canonical URL. Default is computed from site_url + path."
+    },
+    "robots": {
+      "type": "string",
+      "enum": ["index,follow", "noindex,follow", "index,nofollow", "noindex,nofollow"],
+      "description": "Override robots meta. Default 'index,follow' for published articles."
+    },
+    "faq": {
+      "type": "array",
+      "description": "FAQ entries. Triggers Schema.org FAQPage emission.",
+      "items": {
+        "type": "object",
+        "required": ["q", "a"],
+        "properties": {
+          "q": { "type": "string" },
+          "a": { "type": "string" }
+        }
+      }
+    },
+    "howto_steps": {
+      "type": "array",
+      "description": "HowTo steps. Triggers Schema.org HowTo emission.",
+      "items": {
+        "type": "object",
+        "required": ["name", "text"],
+        "properties": {
+          "name": { "type": "string" },
+          "text": { "type": "string" },
+          "image": { "type": "string" }
+        }
+      }
+    },
+    "review": {
+      "type": "object",
+      "description": "Review payload. Triggers Schema.org Review + AggregateRating.",
+      "properties": {
+        "rating_value": { "type": "number", "minimum": 0, "maximum": 5 },
+        "rating_count": { "type": "integer", "minimum": 0 },
+        "best_rating": { "type": "number", "default": 5 },
+        "worst_rating": { "type": "number", "default": 0 },
+        "review_body": { "type": "string" }
+      }
+    },
+    "product": {
+      "type": "object",
+      "description": "Product payload. Triggers Schema.org SoftwareApplication / Product + Offer.",
+      "properties": {
+        "name": { "type": "string" },
+        "operating_system": { "type": "string" },
+        "application_category": { "type": "string" },
+        "price": { "type": "string" },
+        "price_currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+      }
+    },
+    "draft": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, article is excluded from sitemap/feeds and renders only with a valid HMAC preview token."
+    },
+    "reading_time": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Override reading-time minutes. Default is computed from word count."
+    }
+  },
+  "additionalProperties": false
+}

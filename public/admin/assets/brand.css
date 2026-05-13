@@ -1,0 +1,60 @@
+/*
+ * Bird CMS — admin brand tokens.
+ *
+ * Single source of truth for the admin palette. Loaded BEFORE admin.css so
+ * component rules can reference these vars. Customizing the admin's look
+ * means overriding values here, not editing 21 view files.
+ */
+
+:root {
+    /* Surfaces */
+    --bird-forest-deep:   #0a2520;   /* page background, sidebar */
+    --bird-forest-mid:    #0d3d36;   /* cards, panels, main content */
+    --bird-surface-tint:  #1c5a52;   /* borders, hover, dividers */
+    --bird-surface-soft:  #154747;   /* subtle row hover */
+
+    /* Accents */
+    --bird-teal:          #2dbb98;   /* primary action, links, focus */
+    --bird-teal-deep:     #13aa97;   /* primary hover */
+    --bird-sun-gold:      #f3c33b;   /* secondary accent, highlights */
+    --bird-sun-gold-deep: #deb72e;   /* sun-gold hover */
+    --bird-sunset:        #f1722f;   /* warning */
+    --bird-ember:         #d93c2f;   /* danger / destructive */
+
+    /* Text */
+    --bird-ink-white:     #f8f6f3;   /* primary text on dark */
+    --bird-ink-mute:      #94a89f;   /* muted/secondary text */
+    --bird-ink-dim:       #5b7a73;   /* tertiary, footnote */
+
+    /* Status fills (10% alpha tints, readable backgrounds) */
+    --bird-tint-success:  rgba(45, 187, 152, 0.14);
+    --bird-tint-warning:  rgba(243, 195, 59, 0.14);
+    --bird-tint-danger:   rgba(217, 60, 47, 0.14);
+
+    /* Typography */
+    --bird-font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --bird-font-mono: "Geist Mono", ui-monospace, "SFMono-Regular", "Cascadia Mono", Menlo, Consolas, monospace;
+
+    /* Geometry */
+    --bird-radius-sm:  4px;
+    --bird-radius:     6px;
+    --bird-radius-lg: 10px;
+    --bird-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.30);
+    --bird-shadow:    0 4px 12px rgba(0, 0, 0, 0.35);
+    --bird-shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.40);
+
+    /* Abstract tokens used by .prose and other markdown surfaces. These
+       intentionally alias the bird-* palette so component styles don't
+       hardcode bird-* names. Mirrors the same shape as
+       public/assets/frontend/brand.css. */
+    --bg:           var(--bird-forest-deep);
+    --surface:      var(--bird-forest-mid);
+    --surface-mute: var(--bird-surface-soft);
+    --text:         var(--bird-ink-white);
+    --text-mute:    var(--bird-ink-mute);
+    --text-dim:     var(--bird-ink-dim);
+    --border:       rgba(248, 246, 243, 0.12);
+    --accent:       var(--bird-teal);
+    --accent-light: var(--bird-teal-deep);
+    --font-mono:    var(--bird-font-mono);
+}

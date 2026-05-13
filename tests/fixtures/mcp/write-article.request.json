@@ -1,0 +1,23 @@
+{
+    "_comment": "Golden JSON-RPC request for mcp/server.php tools/call -> write_article. Used by McpServerTest as the canonical 'happy path' payload shape. If the inputSchema for write_article changes, update this fixture so contract drift is visible in code review.",
+    "jsonrpc": "2.0",
+    "id": 42,
+    "method": "tools/call",
+    "params": {
+        "name": "write_article",
+        "arguments": {
+            "category": "blog",
+            "slug": "fixture-article",
+            "frontmatter": {
+                "title": "Fixture Article",
+                "description": "Used by golden-fixture parity tests.",
+                "date": "2026-05-10",
+                "type": "insight",
+                "status": "published",
+                "tags": ["test", "fixture"],
+                "primary": "kw"
+            },
+            "body": "# Fixture body\n\nWritten by the parity test."
+        }
+    }
+}

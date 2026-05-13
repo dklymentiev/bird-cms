@@ -1,0 +1,12 @@
+slug: welcome-to-bird-cms
+title: "Welcome to Bird CMS"
+description: "Your new site is up. Here's the lay of the land - content as files, an admin you can hide, and an opinionated SEO baseline."
+category: getting-started
+date: 2026-04-29
+hero_image: /uploads/demo/hero.svg
+type: guide
+status: published
+tags:
+  - welcome
+  - getting-started
+  - overview

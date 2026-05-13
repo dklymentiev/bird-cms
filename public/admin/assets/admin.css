@@ -1,0 +1,754 @@
+/*
+ * Bird CMS — admin component layer.
+ *
+ * Overrides Tailwind utility classes used across the 21 admin views so the
+ * whole panel inherits Bird brand colors without per-file rewrites.
+ *
+ * Loaded after Tailwind CDN (so its rules win) and after brand.css (so the
+ * `var(--bird-*)` references resolve).
+ *
+ * Strategy: targeted overrides on the utility classes the existing markup
+ * already uses. Editing this file is the only change needed when the admin
+ * palette evolves.
+ */
+
+/* ---------------------------------------------------------------------- */
+/* 1. Base                                                                */
+/* ---------------------------------------------------------------------- */
+
+/* Reserve the vertical scrollbar gutter on every admin page. Without this,
+   short pages (no overflow) and long pages (overflow) reserve/release the
+   ~17px gutter differently, so main-content width changes on every
+   navigation and the fixed sidebar appears to jump horizontally. Setting
+   `stable` keeps the gutter always present. Chrome 94+, Firefox 97+,
+   Safari 17+. */
+html { scrollbar-gutter: stable; }
+
+html, body {
+    background-color: var(--bird-forest-deep);
+    color: var(--bird-ink-white);
+    font-family: var(--bird-font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+code, pre, .font-mono { font-family: var(--bird-font-mono); }
+
+/* Squared edges on form/data elements only. Avatars (rounded-full),
+   icon buttons, and other decorative roundness keep their shape so the
+   panel doesn't look like a 1995 phpMyAdmin port. */
+:where(button, input, select, textarea, table, .card, .bird-card) { border-radius: 0 !important; }
+
+/* Hide Alpine.js cloak attribute. */
+[x-cloak] { display: none !important; }
+
+/* ---------------------------------------------------------------------- */
+/* 1b. Button components -- canonical primary/secondary/danger.            */
+/*                                                                         */
+/* Existing views still ship per-button utility soup (bg-blue-900 px-4...) */
+/* so this layer is purely additive: opt in by adding .btn-* to a button. */
+/* New screens should use these; old ones get migrated as we touch them.  */
+/* ---------------------------------------------------------------------- */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.25;
+    border: 1px solid transparent;
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+    cursor: pointer;
+    text-decoration: none;
+}
+.btn:focus-visible {
+    outline: none;
+    border-color: var(--bird-teal);
+    box-shadow: 0 0 0 3px rgba(45, 187, 152, 0.18);
+}
+/* Catch-all so any button/link in the admin uses the same teal glow
+   as inputs, not the user-agent's blue outline. Inputs / selects /
+   textareas already have their own teal focus rule above. */
+button:focus-visible,
+a:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(45, 187, 152, 0.18);
+}
+.btn:disabled, .btn[aria-disabled="true"] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background-color: var(--bird-blue-900, #1e3a8a);
+    color: var(--bird-blue-200, #bfdbfe);
+    border-color: var(--bird-blue-700, #1d4ed8);
+}
+.btn-primary:hover:not(:disabled) {
+    background-color: var(--bird-blue-800, #1e40af);
+}
+
+.btn-secondary {
+    background-color: transparent;
+    color: var(--bird-ink-soft, #cbd5e1);
+    border-color: var(--bird-surface-tint, #334155);
+}
+.btn-secondary:hover:not(:disabled) {
+    background-color: var(--bird-surface-tint, #334155);
+    color: var(--bird-ink-white, #f1f5f9);
+}
+
+.btn-danger {
+    background-color: #7f1d1d;
+    color: #fecaca;
+    border-color: #991b1b;
+}
+.btn-danger:hover:not(:disabled) {
+    background-color: #991b1b;
+}
+
+.btn-ghost {
+    background-color: transparent;
+    color: var(--bird-ink-mute, #94a3b8);
+    border-color: transparent;
+}
+.btn-ghost:hover:not(:disabled) {
+    background-color: var(--bird-surface-tint, #334155);
+    color: var(--bird-ink-soft, #cbd5e1);
+}
+
+.btn-sm { padding: 0.25rem 0.625rem; font-size: 0.8125rem; }
+.btn-lg { padding: 0.625rem 1.25rem; font-size: 0.9375rem; }
+
+/* ---------------------------------------------------------------------- */
+/* 1c. Sidebar collapse state -- driven by inline pre-Alpine script that  */
+/* applies .bird-sidebar-collapsed to <html> before first paint, so the   */
+/* sidebar starts in the right state instead of flashing wide-then-thin.  */
+/* ---------------------------------------------------------------------- */
+
+@media (min-width: 1024px) {
+    html.bird-sidebar-collapsed .bird-sidebar-wrapper { width: 4rem !important; }
+    html.bird-sidebar-collapsed .bird-sidebar-wrapper .bird-logo > span,
+    html.bird-sidebar-collapsed .bird-sidebar-wrapper nav span {
+        display: none !important;
+    }
+}
+
+/* ---------------------------------------------------------------------- */
+/* 2. Surfaces -- map every grey/slate utility to brand surfaces          */
+/* ---------------------------------------------------------------------- */
+
+.bg-white,
+.bg-gray-100,
+.bg-slate-100,
+.bg-slate-800        { background-color: var(--bird-forest-mid)   !important; }
+
+.bg-gray-50,
+.bg-slate-50,
+.bg-slate-900,
+.bg-slate-950        { background-color: var(--bird-forest-deep)  !important; }
+
+.bg-gray-200,
+.bg-slate-200,
+.bg-slate-700        { background-color: var(--bird-surface-tint) !important; }
+
+.bg-gray-300,
+.bg-slate-300,
+.bg-slate-600        { background-color: var(--bird-surface-soft) !important; }
+
+/* Hover variants on the same scale */
+.hover\:bg-gray-50:hover,
+.hover\:bg-slate-50:hover    { background-color: var(--bird-surface-tint) !important; }
+.hover\:bg-gray-100:hover,
+.hover\:bg-slate-100:hover   { background-color: var(--bird-surface-tint) !important; }
+.hover\:bg-gray-200:hover,
+.hover\:bg-slate-200:hover   { background-color: var(--bird-surface-soft) !important; }
+.hover\:bg-slate-700:hover   { background-color: var(--bird-surface-soft) !important; }
+.hover\:bg-slate-800:hover   { background-color: var(--bird-surface-tint) !important; }
+
+/* ---------------------------------------------------------------------- */
+/* 3. Text -- darker = lighter on a dark theme                            */
+/* ---------------------------------------------------------------------- */
+
+.text-gray-900, .text-gray-800,
+.text-slate-900, .text-slate-100,
+.text-slate-50               { color: var(--bird-ink-white) !important; }
+
+.text-gray-700, .text-gray-600,
+.text-slate-700, .text-slate-300,
+.text-slate-400              { color: var(--bird-ink-mute) !important; }
+
+.text-gray-500, .text-gray-400,
+.text-slate-500, .text-slate-600 { color: var(--bird-ink-dim) !important; }
+
+/* Default body text already inherits from html, but legacy text-black */
+.text-black                  { color: var(--bird-ink-white) !important; }
+
+/* ---------------------------------------------------------------------- */
+/* 4. Borders + dividers                                                  */
+/* ---------------------------------------------------------------------- */
+
+.border-gray-100,
+.border-slate-100,
+.border-slate-800            { border-color: var(--bird-forest-mid)   !important; }
+
+.border-gray-200, .border-gray-300,
+.border-slate-200, .border-slate-300,
+.border-slate-700            { border-color: var(--bird-surface-tint) !important; }
+
+.divide-gray-200 > * + *,
+.divide-gray-100 > * + *,
+.divide-slate-700 > * + *,
+.divide-slate-800 > * + *    { border-color: var(--bird-surface-tint) !important; }
+
+/* ---------------------------------------------------------------------- */
+/* 5. Primary action -- replace blue scale with teal                      */
+/* ---------------------------------------------------------------------- */
+
+.bg-blue-500, .bg-blue-600, .bg-blue-700,
+.bg-primary-500, .bg-primary-600         { background-color: var(--bird-teal)      !important; color: var(--bird-forest-deep) !important; }
+.bg-blue-500:hover, .bg-blue-600:hover,
+.hover\:bg-blue-600:hover, .hover\:bg-blue-700:hover { background-color: var(--bird-teal-deep) !important; }
+
+.text-blue-200, .text-blue-300,
+.text-blue-500, .text-blue-600, .text-blue-700,
+.text-primary-500, .text-primary-600     { color: var(--bird-teal) !important; }
+.hover\:text-blue-500:hover, .hover\:text-blue-700:hover { color: var(--bird-teal-deep) !important; }
+
+/* Active sidebar item background (existing markup uses bg-blue-950) */
+.bg-blue-900, .bg-blue-950               { background-color: var(--bird-surface-tint) !important; color: var(--bird-teal) !important; }
+
+.border-blue-500, .border-blue-600       { border-color: var(--bird-teal) !important; }
+.border-blue-700                          { border-color: transparent !important; }
+.ring-blue-500                            { --tw-ring-color: var(--bird-teal) !important; }
+
+/* Secondary highlight scale (sun-gold) for indigo/violet utility usage */
+.bg-indigo-500, .bg-indigo-600,
+.bg-violet-500                            { background-color: var(--bird-sun-gold) !important; color: var(--bird-forest-deep) !important; }
+.text-indigo-500, .text-indigo-600        { color: var(--bird-sun-gold) !important; }
+
+/* ---------------------------------------------------------------------- */
+/* 6. Status: success / warning / danger                                  */
+/* ---------------------------------------------------------------------- */
+
+.bg-green-50, .bg-green-100, .bg-emerald-50,
+.bg-emerald-100              { background-color: var(--bird-tint-success) !important; }
+.text-green-500, .text-green-600, .text-green-700,
+.text-green-800, .text-emerald-500, .text-emerald-600,
+.text-emerald-700, .text-emerald-800 { color: var(--bird-teal) !important; }
+.border-green-500, .border-emerald-500 { border-color: var(--bird-teal) !important; }
+.bg-green-500, .bg-emerald-500 { background-color: var(--bird-teal) !important; color: var(--bird-forest-deep) !important; }
+
+.bg-yellow-50, .bg-yellow-100, .bg-amber-50,
+.bg-amber-100                { background-color: var(--bird-tint-warning) !important; }
+.text-yellow-500, .text-yellow-600, .text-yellow-700,
+.text-yellow-800, .text-amber-500, .text-amber-600,
+.text-amber-700, .text-amber-800 { color: var(--bird-sun-gold) !important; }
+.border-yellow-500, .border-amber-500 { border-color: var(--bird-sun-gold) !important; }
+.bg-yellow-500, .bg-amber-500 { background-color: var(--bird-sun-gold) !important; color: var(--bird-forest-deep) !important; }
+
+.bg-red-50, .bg-red-100, .bg-rose-50,
+.bg-rose-100                 { background-color: var(--bird-tint-danger) !important; }
+.text-red-700, .text-red-800, .text-rose-700,
+.text-rose-800               { color: var(--bird-ember) !important; }
+.border-red-500, .border-rose-500 { border-color: var(--bird-ember) !important; }
+
+/* Solid danger button variant */
+.bg-red-500, .bg-red-600, .bg-rose-500,
+.bg-rose-600                 { background-color: var(--bird-ember) !important; color: var(--bird-ink-white) !important; }
+
+/* Tinted accent surfaces for stat tiles / informational chips */
+.bg-blue-50, .bg-blue-100, .bg-sky-50, .bg-sky-100,
+.bg-cyan-50, .bg-cyan-100    { background-color: rgba(45, 187, 152, 0.14) !important; }
+.bg-indigo-50, .bg-indigo-100,
+.bg-violet-50, .bg-violet-100,
+.bg-purple-50, .bg-purple-100 { background-color: rgba(243, 195, 59, 0.14) !important; }
+
+/* Purple/violet text scale -- ride the sun-gold accent */
+.text-purple-500, .text-purple-600, .text-purple-700,
+.text-violet-500, .text-violet-600, .text-violet-700 { color: var(--bird-sun-gold) !important; }
+.bg-purple-500, .bg-purple-600 { background-color: var(--bird-sun-gold) !important; color: var(--bird-forest-deep) !important; }
+
+/* ---------------------------------------------------------------------- */
+/* 7. Form controls                                                       */
+/* ---------------------------------------------------------------------- */
+
+input, select, textarea {
+    background-color: var(--bird-forest-deep) !important;
+    border: 1px solid var(--bird-surface-tint) !important;
+    color: var(--bird-ink-white) !important;
+    transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+input::placeholder, textarea::placeholder { color: var(--bird-ink-dim) !important; }
+input:focus, select:focus, textarea:focus {
+    outline: none !important;
+    border-color: var(--bird-teal) !important;
+    box-shadow: 0 0 0 3px rgba(45, 187, 152, 0.18) !important;
+}
+input[type="checkbox"], input[type="radio"] { accent-color: var(--bird-teal); }
+
+/* ---------------------------------------------------------------------- */
+/* 8. Tables                                                              */
+/* ---------------------------------------------------------------------- */
+
+table        { background-color: var(--bird-forest-mid) !important; }
+thead, th    { background-color: var(--bird-forest-deep) !important; color: var(--bird-ink-mute) !important; }
+td           { border-color: var(--bird-surface-tint) !important; }
+tr:hover td  { background-color: var(--bird-surface-soft) !important; }
+
+/* ---------------------------------------------------------------------- */
+/* 9. Shadows -- minimal 1px hairline on dark theme                       */
+/* ---------------------------------------------------------------------- */
+
+.shadow-sm,
+.shadow, .shadow-md         { box-shadow: var(--bird-shadow-sm) !important; }
+.shadow-lg, .shadow-xl,
+.shadow-2xl                 { box-shadow: var(--bird-shadow)    !important; }
+
+/* Card radius parity: rounded-lg matches dashboard's rounded-xl. */
+.bg-white.rounded-lg        { border-radius: 0.75rem !important; }
+
+/* ---------------------------------------------------------------------- */
+/* 10. Sidebar emphasis                                                   */
+/* ---------------------------------------------------------------------- */
+
+aside, [data-bird-sidebar] {
+    background-color: var(--bird-forest-deep) !important;
+    border-right: 1px solid var(--bird-surface-tint) !important;
+}
+aside a, [data-bird-sidebar] a {
+    color: var(--bird-ink-mute);
+    transition: background 120ms ease, color 120ms ease;
+}
+aside a:hover, [data-bird-sidebar] a:hover {
+    background-color: var(--bird-forest-mid);
+    color: var(--bird-ink-white);
+}
+aside a.active, aside a[aria-current="page"],
+[data-bird-sidebar] a.active, [data-bird-sidebar] a[aria-current="page"] {
+    background-color: var(--bird-surface-tint);
+    color: var(--bird-teal);
+    border-left: 3px solid var(--bird-teal);
+    padding-left: calc(var(--bird-pad-sidebar, 16px) - 3px);
+}
+
+/* ---------------------------------------------------------------------- */
+/* 11. Bird logo block                                                    */
+/* ---------------------------------------------------------------------- */
+
+.bird-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--bird-ink-white);
+    text-decoration: none;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+.bird-logo img, .bird-logo svg { width: 32px; height: 32px; display: block; }
+.bird-logo .bird-logo-name { font-size: 1.05rem; }
+.bird-logo .bird-logo-tag  { font-size: 0.7rem; color: var(--bird-ink-mute); text-transform: uppercase; letter-spacing: 0.08em; }
+
+/* ---------------------------------------------------------------------- */
+/* 11b. Dashboard cards + key-value + quick-links + pills                  */
+/*                                                                         */
+/* Surface-tinted cards with proper iconed headers. Replaces the per-view  */
+/* Tailwind utility soup that was painting bg-white on the dark theme.    */
+/* Used by themes/admin/views/dashboard.php.                              */
+/* ---------------------------------------------------------------------- */
+
+/* Single 2-column grid for every dashboard card. Uniform widths
+   regardless of how many cards are visible (drafts/scheduled may be
+   absent on a fresh install). The grid auto-flows row-by-row, so a
+   single card occupies one cell at half-width rather than stretching
+   awkwardly. Below 1024px it collapses to a single column. */
+.bird-dashboard {
+    display: grid;
+    /* auto-fit packs as many cards as the viewport allows: 3 across on
+       wide screens (typical desktop), 2 on narrower laptops, 1 on
+       phones. No more "2 + 1 dangling" layout when there are 3 visible
+       cards. The minmax floor (280px) keeps cards readable; the 1fr
+       ceiling lets each card share the remaining space evenly. */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    /* All rows the same height = tallest row's content, so cards align
+       at top AND bottom regardless of how many list rows they contain. */
+    grid-auto-rows: 1fr;
+    gap: 1.25rem;
+}
+
+.bird-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 1rem 1.15rem 0.85rem;
+    color: var(--text);
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+.bird-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--border);
+}
+.bird-card-header h2 {
+    flex: 1;
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.005em;
+}
+.bird-card-icon {
+    color: var(--accent);
+    font-size: 1.05rem;
+    line-height: 1;
+}
+.bird-card-count {
+    font-size: 0.75rem;
+    color: var(--text-mute);
+    background: var(--bird-surface-soft);
+    padding: 0.1rem 0.5rem;
+    font-variant-numeric: tabular-nums;
+    border: 1px solid var(--border);
+}
+
+.bird-card-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+.bird-card-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--border);
+}
+.bird-card-list li:last-child { border-bottom: 0; padding-bottom: 0; }
+.bird-card-row-main { flex: 1; min-width: 0; }
+.bird-card-row-title {
+    display: block;
+    color: var(--text);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.bird-card-row-title:hover { color: var(--accent); }
+.bird-card-row-meta {
+    color: var(--text-mute);
+    font-size: 0.75rem;
+    margin-top: 0.15rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.bird-card-row-url {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--text-mute);
+}
+.bird-card-row-sep { color: var(--text-dim); margin: 0 0.25rem; }
+
+/* Single-line variant: URL and meta share one row (used by Recent
+   edits rows, where there's no title to render). */
+.bird-card-row-inline {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    color: var(--text);
+    text-decoration: none;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.bird-card-row-inline:hover .bird-card-row-url { color: var(--accent); }
+.bird-card-row-inline .bird-card-row-meta {
+    color: var(--text-mute);
+    font-size: 0.78rem;
+    margin: 0;
+    flex-shrink: 0;
+}
+.bird-card-row-inline .bird-card-row-sep { margin: 0; }
+
+/* Status pills used in dashboard cards. */
+.bird-pill {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 0.15rem 0.55rem;
+    line-height: 1.3;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    border: 1px solid var(--border);
+    background: var(--bird-surface-soft);
+    color: var(--text-mute);
+}
+.bird-pill-mute    { background: var(--bird-surface-soft); color: var(--text-mute); border-color: var(--border); }
+.bird-pill-accent  { background: color-mix(in oklab, var(--accent) 18%, var(--surface)); color: var(--accent); border-color: color-mix(in oklab, var(--accent) 35%, var(--border)); }
+.bird-pill-success { background: var(--bird-tint-success); color: var(--bird-teal); border-color: color-mix(in oklab, var(--bird-teal) 35%, var(--border)); }
+.bird-pill-warning { background: var(--bird-tint-warning); color: var(--bird-sun-gold); border-color: color-mix(in oklab, var(--bird-sun-gold) 35%, var(--border)); }
+.bird-pill-violet  { background: rgba(167, 139, 250, 0.14); color: #c4b5fd; border-color: rgba(167, 139, 250, 0.35); }
+
+/* Site key-value list. */
+.bird-keyvalue {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    font-size: 0.875rem;
+}
+.bird-keyvalue > div {
+    display: flex;
+    align-items: baseline;
+    gap: 0.85rem;
+}
+.bird-keyvalue dt {
+    flex: 0 0 6.5rem;
+    color: var(--text-mute);
+    font-size: 0.8rem;
+}
+.bird-keyvalue dd {
+    margin: 0;
+    flex: 1;
+    color: var(--text);
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.bird-keyvalue dd a { color: var(--accent); text-decoration: none; }
+.bird-keyvalue dd a:hover { text-decoration: underline; }
+
+/* Quick links: icon + label rows, full-width hover. */
+.bird-quicklinks {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+.bird-quicklinks li { margin: 0; }
+.bird-quicklinks a {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.55rem 0.65rem;
+    color: var(--text);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: background-color .15s ease, color .15s ease;
+    border: 1px solid transparent;
+    margin: 0 -0.65rem;
+}
+.bird-quicklinks a:hover {
+    background: var(--bird-surface-soft);
+    color: var(--accent);
+}
+.bird-quicklinks a i {
+    color: var(--accent);
+    font-size: 1.05rem;
+    line-height: 1;
+    width: 1.1rem;
+    text-align: center;
+}
+
+/* ---------------------------------------------------------------------- */
+/* 12. Selection                                                          */
+/* ---------------------------------------------------------------------- */
+
+::selection { background: rgba(45, 187, 152, 0.35); color: var(--bird-ink-white); }
+
+/* ---------------------------------------------------------------------- */
+/* 13. Docs viewer prose (/admin/docs)                                    */
+/*                                                                        */
+/* The doc tree lives in the main admin sidebar; the viewer body itself   */
+/* is just .prose long-form markdown. Rules below are shared with any     */
+/* future admin view that renders long-form markdown -- no second .prose  */
+/* definition anywhere else.                                              */
+/* ---------------------------------------------------------------------- */
+
+/* The viewer wraps content in a centered surface card so the prose
+   doesn't sit directly on the main green wash -- gives the typography
+   the same kind of "page" feel GitHub's markdown renders into. */
+.docs-page {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 2rem 2.25rem;
+    max-width: 880px;
+    margin: 0 auto;
+}
+
+.prose {
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 0.95rem;
+    max-width: 72ch;
+}
+.prose > :first-child { margin-top: 0; }
+.prose > :last-child  { margin-bottom: 0; }
+
+.prose h1 {
+    font-size: 1.85rem;
+    font-weight: 700;
+    margin: 0 0 1.25rem;
+    padding-bottom: 0.45rem;
+    border-bottom: 1px solid var(--border);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+}
+.prose h2 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin: 2.25rem 0 0.85rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid var(--border);
+    line-height: 1.3;
+    letter-spacing: -0.005em;
+}
+.prose h3 { font-size: 1.15rem; font-weight: 600; margin: 1.75rem 0 0.6rem; line-height: 1.35; }
+.prose h4 { font-size: 1rem;    font-weight: 600; margin: 1.4rem  0 0.5rem; }
+
+.prose p { margin: 0 0 1rem; }
+.prose a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid color-mix(in oklab, var(--accent) 40%, transparent);
+}
+.prose a:hover {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+
+.prose ul, .prose ol { margin: 0 0 1rem 1.5rem; padding: 0; }
+.prose li { margin-bottom: 0.35rem; }
+.prose li > p { margin-bottom: 0.35rem; }
+.prose strong { color: var(--text); font-weight: 600; }
+.prose em { color: var(--text); }
+
+.prose blockquote {
+    border-left: 3px solid var(--accent);
+    margin: 1rem 0;
+    padding: 0.35rem 0 0.35rem 1rem;
+    color: var(--text-mute);
+    background: color-mix(in oklab, var(--accent) 6%, transparent);
+}
+.prose blockquote p { margin-bottom: 0.5rem; }
+.prose blockquote p:last-child { margin-bottom: 0; }
+
+.prose code {
+    background: color-mix(in oklab, var(--bird-ink-white) 8%, transparent);
+    padding: 0.12rem 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    color: var(--bird-sun-gold);
+    border-radius: 3px;
+}
+.prose pre {
+    background: var(--bg);
+    color: var(--text);
+    padding: 1rem 1.15rem;
+    border: 1px solid var(--border);
+    overflow-x: auto;
+    margin: 0 0 1.15rem;
+    font-size: 0.83rem;
+    line-height: 1.55;
+    border-radius: 4px;
+}
+.prose pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    font-size: inherit;
+    border-radius: 0;
+}
+.prose pre code.hljs { background: transparent; padding: 0; }
+
+.prose img { max-width: 100%; height: auto; margin: 0.75rem 0; }
+.prose hr  { border: 0; border-top: 1px solid var(--border); margin: 2rem 0; }
+
+.prose table.markdown-table {
+    border-collapse: collapse;
+    margin: 0.5rem 0 1.15rem;
+    font-size: 0.9rem;
+    width: auto;
+    color: var(--text);
+}
+.prose table.markdown-table th,
+.prose table.markdown-table td {
+    border: 1px solid var(--border);
+    padding: 0.4rem 0.7rem;
+    text-align: left;
+    vertical-align: top;
+}
+.prose table.markdown-table th {
+    background: var(--surface-mute);
+    font-weight: 600;
+    color: var(--text);
+}
+
+/* Docs back link sits above the prose card on every page. Quiet button
+   look so it doesn't fight the title. */
+.docs-back {
+    margin: 0 auto 1rem;
+    max-width: 880px;
+    font-size: 0.85rem;
+}
+.docs-back a {
+    color: var(--text-mute);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    padding: 0.3rem 0.7rem;
+    display: inline-block;
+}
+.docs-back a:hover { color: var(--accent); border-color: var(--accent); }
+
+/* Docs welcome / index. Reads like a chapter listing -- bold title on
+   its own line, muted lede underneath -- rather than a glossary of
+   term-definition pairs. */
+.docs-welcome .docs-index-section { margin: 0 0 2rem; }
+.docs-welcome .docs-index-section:last-child { margin-bottom: 0; }
+.docs-welcome .docs-index-section h2 { margin-bottom: 1rem; }
+
+.docs-welcome ul.docs-index-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.docs-welcome ul.docs-index-list li {
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--border);
+}
+.docs-welcome ul.docs-index-list li:last-child { border-bottom: 0; }
+
+.docs-welcome a.docs-index-title {
+    display: inline-block;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text);
+    text-decoration: none;
+    border-bottom: 0;
+    margin: 0 0 0.2rem;
+    letter-spacing: -0.005em;
+}
+.docs-welcome a.docs-index-title:hover {
+    color: var(--accent);
+    border-bottom: 0;
+}
+
+.docs-welcome .docs-index-lede {
+    color: var(--text-mute);
+    font-size: 0.9rem;
+    line-height: 1.55;
+    margin: 0;
+}
+

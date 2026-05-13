@@ -1,0 +1,16 @@
+{
+    "_comment": "Golden fixture for mcp/server.php tools/list. Lists every tool name advertised by the server. If a new tool ships, add its name here AND extend McpServerTest::testGoldenFixtureToolsListMatchesExpectedShape with whatever shape contract you want pinned.",
+    "tools": [
+        "list_articles",
+        "read_article",
+        "write_article",
+        "list_categories",
+        "delete_article",
+        "list_pages",
+        "read_page",
+        "write_page",
+        "publish",
+        "unpublish",
+        "search"
+    ]
+}

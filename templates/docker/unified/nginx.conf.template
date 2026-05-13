@@ -1,0 +1,109 @@
+# Redirect www to non-www
+server {
+    listen 80;
+    server_name www.{{DOMAIN}};
+    return 301 https://{{DOMAIN}}$request_uri;
+}
+
+server {
+    listen 80;
+    server_name {{DOMAIN}} _;
+
+    root /var/www/html/public;
+    # Static index.html wins over PHP. Sites with a hand-coded landing
+    # (e.g. bird-cms.com's marketing page) drop a public/index.html at the
+    # site root; nginx serves it directly without invoking the engine. Sites
+    # without index.html fall through to index.php (the engine entry point)
+    # exactly as before, so this is safe for every deployment shape.
+    index index.html index.php;
+
+    # Preserve port in 301 redirects (e.g. localhost:8080 -> /admin/ keeps :8080)
+    absolute_redirect off;
+    port_in_redirect on;
+
+    # IP blacklist (auto-generated; entrypoint.sh writes empty file if no blacklist.txt)
+    include /var/www/html/storage/analytics/blacklist.conf;
+
+    # Hide PHP version
+    fastcgi_hide_header X-Powered-By;
+
+    # Security headers
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # Trust upstream proxies (Docker networks + Cloudflare edges) for real client IP
+    set_real_ip_from 172.17.0.0/16;
+    set_real_ip_from 172.18.0.0/16;
+    set_real_ip_from 173.245.48.0/20;
+    set_real_ip_from 103.21.244.0/22;
+    set_real_ip_from 103.22.200.0/22;
+    set_real_ip_from 103.31.4.0/22;
+    set_real_ip_from 141.101.64.0/18;
+    set_real_ip_from 108.162.192.0/18;
+    set_real_ip_from 190.93.240.0/20;
+    set_real_ip_from 188.114.96.0/20;
+    set_real_ip_from 197.234.240.0/22;
+    set_real_ip_from 198.41.128.0/17;
+    set_real_ip_from 162.158.0.0/15;
+    set_real_ip_from 172.64.0.0/13;
+    set_real_ip_from 131.0.72.0/22;
+    set_real_ip_from 2400:cb00::/32;
+    set_real_ip_from 2405:8100::/32;
+    set_real_ip_from 2405:b500::/32;
+    set_real_ip_from 2606:4700::/32;
+    set_real_ip_from 2803:f800::/32;
+    set_real_ip_from 2c0f:f248::/32;
+    set_real_ip_from 2a06:98c0::/29;
+    real_ip_header CF-Connecting-IP;
+    real_ip_recursive on;
+
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log warn;
+
+    client_max_body_size 10m;
+
+    # Admin panel
+    location /admin {
+        try_files $uri $uri/ /admin/index.php?$query_string;
+    }
+
+    # Install wizard. ^~ beats the regex location for css/js below, so wizard
+    # static assets (under /install/assets/) get served directly while every
+    # other /install path falls through to public/index.php's install guard.
+    # Using $uri only (no $uri/) so directory paths skip nginx's index-file
+    # search and fall straight through to the PHP fallback.
+    location ^~ /install {
+        try_files $uri /index.php?$query_string;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        try_files $uri =404;
+        # php-fpm.conf listens on this unix socket (faster + simpler than TCP)
+        fastcgi_pass unix:/var/run/php-fpm.sock;
+        fastcgi_index index.php;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+        fastcgi_read_timeout 180;
+
+        # Security headers for PHP responses
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    }
+
+    location ~* \.(?:ico|css|js|gif|jpe?g|png|svg|webp|woff2?)$ {
+        expires 7d;
+        add_header Cache-Control "public";
+        try_files $uri =404;
+    }
+}

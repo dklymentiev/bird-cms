@@ -1,0 +1,381 @@
+/*
+ * Bird CMS — frontend component layer.
+ *
+ * Same approach as admin.css: targeted overrides on the Tailwind utility
+ * classes used across themes/tailwind/. Loads after Tailwind CDN so its
+ * rules win without per-template !important wars. brand.css must load
+ * BEFORE this file (we reference its CSS variables).
+ *
+ * Token-driven: every rule uses `var(--bg)` / `var(--accent)` / etc. These
+ * variables flip with the [data-theme] attribute on <html> (set by the
+ * theme-toggle inline script), so all rules below "just work" in both
+ * light and dark mode without duplication.
+ */
+
+/* ---------------------------------------------------------------------- */
+/* 1. Base                                                                */
+/* ---------------------------------------------------------------------- */
+
+html, body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+code, pre, .font-mono { font-family: var(--font-mono); }
+
+/* ---------------------------------------------------------------------- */
+/* 2. Surfaces                                                            */
+/* ---------------------------------------------------------------------- */
+
+.bg-white, .bg-slate-50, .bg-gray-50,
+.dark .dark\:bg-slate-900,
+.dark .dark\:bg-slate-900\/40, .dark .dark\:bg-slate-900\/50,
+.dark .dark\:bg-slate-900\/60, .dark .dark\:bg-slate-900\/70,
+.dark .dark\:bg-slate-900\/80, .dark .dark\:bg-slate-900\/95,
+.dark .dark\:bg-slate-950                                    { background-color: var(--bg) !important; }
+
+.bg-slate-100, .bg-gray-100,
+.dark .dark\:bg-slate-800,
+.dark .dark\:bg-slate-800\/60, .dark .dark\:bg-slate-800\/70,
+.dark .dark\:bg-slate-800\/80, .dark .dark\:bg-slate-800\/95 { background-color: var(--surface) !important; }
+
+.bg-slate-200, .bg-gray-200,
+.dark .dark\:bg-slate-700                                    { background-color: var(--surface-mute) !important; }
+
+.bg-slate-800, .bg-slate-900,
+.bg-slate-950, .bg-gray-900, .bg-gray-950                   { background-color: var(--bg) !important; }
+
+/* Backdrop / translucent variants used in headers + overlays */
+.bg-white\/70, .bg-white\/50, .bg-white\/95                  { background-color: color-mix(in oklab, var(--bg) 80%, transparent) !important; }
+
+/* Modal backdrops (search-overlay, newsletter-modal, newsletter-signup-modal,
+   newsletter-modal-* on the home view) -- they all use bg-slate-900/80 to
+   dim the page behind. Map to a forest-deep tint so it dims with brand
+   color rather than the slate-blue Tailwind default. */
+.bg-slate-900\/70, .bg-slate-900\/80, .bg-slate-900\/90,
+.bg-slate-950\/70, .bg-slate-950\/80, .bg-slate-950\/90      { background-color: rgba(10, 37, 32, 0.85) !important; }
+
+/* Hover variants */
+.hover\:bg-slate-50:hover, .hover\:bg-slate-100:hover,
+.dark .dark\:hover\:bg-slate-800:hover,
+.dark .dark\:hover\:bg-slate-700:hover                       { background-color: var(--surface) !important; }
+
+/* ---------------------------------------------------------------------- */
+/* 3. Text                                                                */
+/* ---------------------------------------------------------------------- */
+
+.text-slate-900,
+.dark .dark\:text-slate-100,
+.text-slate-100                  { color: var(--text) !important; }
+
+.text-slate-700, .text-slate-600,
+.dark .dark\:text-slate-300, .dark .dark\:text-slate-400 { color: var(--text-mute) !important; }
+
+.text-slate-500, .text-slate-400,
+.dark .dark\:text-slate-500      { color: var(--text-dim) !important; }
+
+/* ---------------------------------------------------------------------- */
+/* 4. Borders                                                             */
+/* ---------------------------------------------------------------------- */
+
+.border-slate-200, .border-slate-300,
+.dark .dark\:border-slate-700, .dark .dark\:border-slate-600 { border-color: var(--border) !important; }
+
+/* ---------------------------------------------------------------------- */
+/* 5. Brand accent (replaces indigo "brand" scale)                        */
+/* ---------------------------------------------------------------------- */
+
+/* All bg-brand-* variants land on teal. Indigo Tailwind defaults clash badly
+   with forest+gold elsewhere on the page. */
+.bg-brand-100, .bg-brand-200            { background-color: color-mix(in oklab, var(--accent) 18%, var(--surface)) !important; }
+.bg-brand-300, .bg-brand-400            { background-color: var(--accent-soft) !important; color: var(--bg) !important; }
+.bg-brand-500, .bg-brand-600,
+.bg-brand-700, .bg-brand-800            { background-color: var(--accent) !important; color: var(--bg) !important; }
+
+.hover\:bg-brand-300:hover,
+.hover\:bg-brand-400:hover              { background-color: var(--accent) !important; }
+.hover\:bg-brand-500:hover,
+.hover\:bg-brand-600:hover,
+.hover\:bg-brand-700:hover              { background-color: var(--accent-soft) !important; }
+
+html .text-brand-100, html .text-brand-200,
+html .text-brand-300, html .text-brand-400,
+html .dark\:text-brand-200, html .dark\:text-brand-300,
+.dark .dark\:text-brand-200, .dark .dark\:text-brand-300 { color: var(--accent-light) !important; }
+html .text-brand-500, html .text-brand-600,
+html .text-brand-700                                      { color: var(--accent) !important; }
+
+.hover\:text-brand-100:hover,
+.hover\:text-brand-200:hover,
+.hover\:text-brand-300:hover,
+.hover\:text-brand-400:hover,
+.hover\:text-brand-500:hover,
+.hover\:text-brand-600:hover,
+.hover\:text-brand-700:hover            { color: var(--highlight) !important; }
+
+.border-brand-200, .border-brand-300,
+.border-brand-400, .border-brand-500,
+.border-brand-600                       { border-color: var(--accent) !important; }
+
+.hover\:border-brand-300:hover,
+.hover\:border-brand-400:hover,
+.hover\:border-brand-500:hover          { border-color: var(--highlight) !important; }
+
+.ring-brand-100, .ring-brand-200,
+.ring-brand-300, .ring-brand-400        { --tw-ring-color: var(--accent) !important; }
+.focus-visible\:ring-brand-300:focus-visible,
+.focus\:ring-brand-200:focus,
+.focus\:ring-brand-300:focus,
+.focus\:ring-brand-400:focus            { box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 30%, transparent) !important; }
+
+/* Gradient stop utilities Tailwind compiles into CSS variables. Cover all
+   the slate/white/blue/brand stops the default theme uses across views.
+   Each stop maps onto a brand surface so gradients become subtle tonal
+   shifts within the brand palette instead of colour clashes.            */
+
+/* Light-end stops -> page bg / surface */
+.from-white, .from-slate-50, .from-slate-100,
+.from-gray-50, .from-gray-100,
+.from-brand-50, .from-brand-100, .from-brand-200      { --tw-gradient-from: var(--bg) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, transparent) !important; }
+.via-white, .via-slate-50, .via-slate-100,
+.via-brand-50, .via-brand-100, .via-brand-200         { --tw-gradient-stops: var(--tw-gradient-from, transparent), var(--bg), var(--tw-gradient-to, transparent) !important; }
+.to-white, .to-slate-50, .to-slate-100, .to-slate-100\/60,
+.to-gray-50, .to-gray-100,
+.to-brand-50, .to-brand-100, .to-brand-200            { --tw-gradient-to: var(--bg) !important; }
+
+/* Brand-color stops (mid + dark) -> teal accent */
+.from-brand-500, .from-brand-600, .from-brand-700     { --tw-gradient-from: var(--accent) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, transparent) !important; }
+.via-brand-500, .via-brand-600                         { --tw-gradient-stops: var(--tw-gradient-from, transparent), var(--accent), var(--tw-gradient-to, transparent) !important; }
+.to-brand-500, .to-brand-600, .to-brand-700           { --tw-gradient-to: var(--accent) !important; }
+
+/* Dark-end stops + dark: variants -> surface (forest-mid in dark, cream in light) */
+.from-slate-900, .from-slate-950, .from-gray-900, .from-gray-950,
+.dark .dark\:from-slate-900, .dark .dark\:from-slate-950,
+.dark .dark\:from-gray-900                            { --tw-gradient-from: var(--bg) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, transparent) !important; }
+.via-slate-900, .via-slate-950, .via-blue-950,
+.dark .dark\:via-slate-900, .dark .dark\:via-slate-950 { --tw-gradient-stops: var(--tw-gradient-from, transparent), var(--bg), var(--tw-gradient-to, transparent) !important; }
+.to-slate-900, .to-slate-900\/40, .to-slate-950,
+.to-gray-900, .to-gray-950,
+.dark .dark\:to-slate-900, .dark .dark\:to-slate-900\/40,
+.dark .dark\:to-slate-950                             { --tw-gradient-to: var(--bg) !important; }
+
+/* ---------------------------------------------------------------------- */
+/* 6. Status                                                              */
+/* ---------------------------------------------------------------------- */
+
+.bg-green-50, .bg-green-100      { background-color: color-mix(in oklab, var(--accent) 12%, transparent) !important; }
+.text-green-700, .text-green-800 { color: var(--accent) !important; }
+.bg-red-100                       { background-color: color-mix(in oklab, var(--danger) 12%, transparent) !important; }
+.bg-red-500, .bg-red-600          { background-color: var(--danger) !important; color: white !important; }
+.text-red-700, .text-red-800,
+.dark .dark\:text-red-400         { color: var(--danger) !important; }
+
+/* ---------------------------------------------------------------------- */
+/* 7. Forms                                                               */
+/* ---------------------------------------------------------------------- */
+
+input, select, textarea {
+    background-color: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text) !important;
+}
+input::placeholder, textarea::placeholder { color: var(--text-dim) !important; }
+input:focus, select:focus, textarea:focus {
+    outline: none !important;
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 25%, transparent) !important;
+}
+input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
+
+/* ---------------------------------------------------------------------- */
+/* 8. Cards / shadows                                                     */
+/* ---------------------------------------------------------------------- */
+
+/*
+ * One consistent shadow scale across the whole frontend. The default
+ * theme had .shadow-2xl on the newsletter form and .shadow-sm or none
+ * on every other card -- the form looked floated, the rest looked flat.
+ * Pin every Tailwind shadow utility to the same 1-2px subtle elevation
+ * so cards read as a coherent system rather than competing for attention.
+ */
+.shadow-sm,
+.shadow,
+.shadow-md,
+.shadow-lg,
+.shadow-xl,
+.shadow-2xl                      { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18), 0 1px 3px rgba(0, 0, 0, 0.10) !important; }
+
+/* ---------------------------------------------------------------------- */
+/* 9. Article typography (Geist + Geist Mono)                             */
+/* ---------------------------------------------------------------------- */
+
+article h1, article h2, article h3, article h4 {
+    font-family: var(--font-sans);
+    letter-spacing: -0.015em;
+    color: var(--text);
+}
+article p, article li { color: var(--text); }
+article a            { color: var(--accent); text-decoration: none; }
+article a:hover      { color: var(--accent-soft); text-decoration: underline; }
+article code          { font-family: var(--font-mono); background: color-mix(in oklab, var(--highlight) 18%, transparent); color: var(--text); padding: 0 4px; border-radius: 3px; }
+article pre           { font-family: var(--font-mono); background: var(--surface); border: 1px solid var(--border); padding: 14px 16px; overflow-x: auto; border-radius: var(--radius); }
+article pre code      { background: transparent; padding: 0; }
+article blockquote    { border-left: 3px solid var(--accent); padding-left: 16px; color: var(--text-mute); font-style: italic; }
+
+/* ---------------------------------------------------------------------- */
+/* 10. Selection                                                          */
+/* ---------------------------------------------------------------------- */
+
+::selection { background: color-mix(in oklab, var(--accent) 35%, transparent); color: var(--text); }
+
+/* ---------------------------------------------------------------------- */
+/* 11. Hero backdrop -- five-color brand glow on forest-deep              */
+/* ---------------------------------------------------------------------- */
+
+/*
+ * Multi-layered radial gradients in the brand's full five-color palette.
+ * Each glow sits in a different corner and bleeds toward center, so the
+ * hero reads as warm/atmospheric instead of flat. Forest-deep base gives
+ * the dark foundation; the dark center radial brings focus back inward
+ * so the foreground card stays legible against the glow.
+ *
+ * Colors (low alpha so each is more "atmosphere" than "spotlight"):
+ *   top-left      teal           rgba(45,187,152, ...)
+ *   top-right     sun-gold       rgba(243,195,59, ...)
+ *   bottom-right  sunset-orange  rgba(241,114,47, ...)
+ *   bottom-left   ember-red      rgba(217, 60,47, ...)
+ *   center        forest-mid     for foreground readability
+ */
+/*
+ * Single-source stage lighting -- one teal spotlight from upper-center
+ * pools warm light onto the bird, sun-gold + ember-red echo in the
+ * lower edges as ambient bounce. Forest-deep base + a vignette ring
+ * focus attention back to the foreground card.
+ */
+.bird-hero-bg {
+    background:
+        /* Vignette: dim the corners so the spotlight reads stronger */
+        radial-gradient(ellipse 95% 80% at 50% 50%, transparent 35%, rgba(0,0,0,0.50) 100%),
+        /* Ambient sun-gold bounce from below */
+        radial-gradient(ellipse 80% 35% at 50% 110%, rgba(243,195,59,0.18), transparent 70%),
+        /* Faint ember-red warmth at the edges */
+        radial-gradient(ellipse 60% 50% at 100% 80%, rgba(241,114,47,0.10), transparent 60%),
+        /* Main teal spotlight from upper center -- the hero light */
+        radial-gradient(ellipse 70% 80% at 50% 0%, rgba(45,187,152,0.45), rgba(45,187,152,0.10) 35%, transparent 65%),
+        /* Forest-deep base */
+        #0a2520;
+}
+
+/* Slow breathing pulse on the spotlight intensity. Subtle -- 8s cycle,
+   ~10% opacity swing -- so it reads as ambient light, not animation. */
+.bird-hero-bg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 60% 70% at 50% 0%, rgba(45,187,152,0.20), transparent 55%);
+    animation: bird-hero-pulse 8s ease-in-out infinite alternate;
+    pointer-events: none;
+    z-index: 0;
+}
+@keyframes bird-hero-pulse {
+    0%   { opacity: 0.6; }
+    100% { opacity: 1.0; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .bird-hero-bg::before { animation: none; opacity: 0.85; }
+}
+
+/* ---------------------------------------------------------------------- */
+/* 12. Bird logo block (shared with admin)                                */
+/* ---------------------------------------------------------------------- */
+
+.bird-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+.bird-logo img, .bird-logo svg { width: 28px; height: 28px; display: block; }
+.bird-logo .bird-logo-name { font-size: 1.05rem; }
+
+/* ---------------------------------------------------------------------- */
+/* 13. Big brand intro hero (matches bird-cms-brand.html header)          */
+/* ---------------------------------------------------------------------- */
+
+.hero-bird-frame { width: 280px; height: 280px; margin: 0 auto; }
+.hero-bird-frame .bird-hero-mark { width: 100% !important; height: 100% !important; }
+
+.hero-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-top: 32px;
+    margin-bottom: 20px;
+}
+
+.brand-shimmer {
+    display: inline-block;
+    font-size: clamp(48px, 8vw, 88px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-bottom: 24px;
+    background: linear-gradient(90deg,
+        #2dbb98  6%,
+        #f3c33b 25%,
+        #f1722f 46%,
+        #d93c2f 70%,
+        #2dbb98 95%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero-tagline {
+    font-size: clamp(16px, 1.6vw, 20px);
+    color: var(--text-mute);
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.5;
+}
+
+.hero-cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 40px;
+}
+.hero-cta-primary,
+.hero-cta-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 28px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+    cursor: pointer;
+}
+.hero-cta-primary {
+    background: var(--accent);
+    color: var(--bg);
+    border: 1px solid var(--accent);
+}
+.hero-cta-primary:hover { background: var(--highlight); border-color: var(--highlight); }
+.hero-cta-secondary {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+.hero-cta-secondary:hover { border-color: var(--accent); color: var(--accent); }

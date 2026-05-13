@@ -1,0 +1,12 @@
+slug: writing-your-first-post
+title: "Writing your first post"
+description: "Markdown plus a side meta.yaml file - that's the entire content format."
+category: tutorials
+date: 2026-04-29
+hero_image: /uploads/demo/article-2.svg
+type: tutorial
+status: published
+tags:
+  - writing
+  - markdown
+  - content

@@ -1,0 +1,321 @@
+/*
+ * Bird CMS install wizard — pure CSS, no Tailwind.
+ * Uses brand tokens (forest-deep / teal / sun-gold) so the very first screen
+ * the user sees already feels like the product, not a generic install form.
+ *
+ * System fonts until Phase 2 self-hosts Geist; Geist itself is a clean
+ * geometric sans, so system-ui on macOS/Windows is a graceful fallback.
+ */
+
+:root {
+    --forest-deep:   #0a2520;
+    --forest-mid:    #0d3d36;
+    --surface-tint:  #1c5a52;
+    --teal:          #2dbb98;
+    --teal-deep:     #13aa97;
+    --sun-gold:      #f3c33b;
+    --sunset-orange: #f1722f;
+    --ember-red:     #d93c2f;
+    --ink-white:     #f8f6f3;
+    --ink-mute:      #94a89f;
+    --ink-dim:       #5b7a73;
+
+    --radius-sm: 4px;
+    --radius:    8px;
+    --shadow-card: 0 30px 60px -20px rgba(0, 0, 0, 0.45);
+
+    --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", Menlo, Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    background: var(--forest-deep);
+    color: var(--ink-white);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.5;
+}
+
+body::before {
+    /* Subtle radial light so the page doesn't feel flat. */
+    content: "";
+    position: fixed;
+    inset: 0;
+    background:
+        radial-gradient(circle at 20% 0%, rgba(45,187,152,0.10), transparent 50%),
+        radial-gradient(circle at 80% 100%, rgba(243,195,59,0.08), transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.install-shell {
+    position: relative;
+    z-index: 1;
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 60px 24px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    min-height: 100vh;
+}
+
+/* ---------- Header / brand / progress ---------- */
+
+.install-header {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.install-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--ink-white);
+    text-decoration: none;
+}
+.install-brand-mark {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--forest-mid);
+    border: 1px solid var(--surface-tint);
+    color: var(--teal);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.install-brand-text { display: flex; flex-direction: column; line-height: 1.1; }
+.install-brand-text strong { font-weight: 600; letter-spacing: -0.01em; }
+.install-brand-text em      { font-style: normal; color: var(--ink-mute); font-size: 0.85rem; }
+
+.install-progress {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    counter-reset: step;
+    position: relative;
+}
+.install-progress li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    color: var(--ink-mute);
+    font-size: 0.85rem;
+    position: relative;
+}
+.install-progress li::before {
+    /* Connector line */
+    content: "";
+    position: absolute;
+    top: 14px;
+    left: -50%;
+    right: 50%;
+    height: 1px;
+    background: var(--surface-tint);
+    z-index: 0;
+}
+.install-progress li:first-child::before { display: none; }
+.install-progress li span {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--forest-mid);
+    border: 1px solid var(--surface-tint);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: var(--ink-mute);
+    z-index: 1;
+}
+.install-progress li.done span    { background: var(--teal); border-color: var(--teal); color: var(--forest-deep); }
+.install-progress li.current span { background: var(--sun-gold); border-color: var(--sun-gold); color: var(--forest-deep); }
+.install-progress li.done label,
+.install-progress li.current label { color: var(--ink-white); }
+
+/* ---------- Card / typography ---------- */
+
+.install-card {
+    background: var(--forest-mid);
+    border: 1px solid var(--surface-tint);
+    border-radius: var(--radius);
+    padding: 36px 32px;
+    box-shadow: var(--shadow-card);
+}
+.install-card h2 {
+    margin: 0 0 8px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+.install-card p.lead {
+    margin: 0 0 24px;
+    color: var(--ink-mute);
+}
+.install-footer {
+    text-align: center;
+    color: var(--ink-dim);
+    font-size: 0.8rem;
+    margin-top: auto;
+}
+
+/* ---------- System check rows ---------- */
+
+.check-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+}
+.check-list li {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 12px;
+    align-items: start;
+    padding: 12px 0;
+    border-top: 1px solid var(--surface-tint);
+}
+.check-list li:first-child { border-top: 0; }
+.check-list .icon {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+}
+.check-list .pass .icon { background: rgba(45,187,152,0.18); color: var(--teal); }
+.check-list .warn .icon { background: rgba(243,195,59,0.18); color: var(--sun-gold); }
+.check-list .fail .icon { background: rgba(217,60,47,0.18); color: var(--ember-red); }
+.check-list .label  { color: var(--ink-white); }
+.check-list .hint   { color: var(--ink-mute); font-size: 0.85rem; margin-top: 4px; }
+
+/* ---------- Forms ---------- */
+
+.field        { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+.field-row    { display: grid; gap: 18px; }
+.field-row.cols-2 { grid-template-columns: 1fr 1fr; }
+.field label  { font-size: 0.85rem; color: var(--ink-mute); }
+.field input,
+.field select,
+.field textarea {
+    background: var(--forest-deep);
+    border: 1px solid var(--surface-tint);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    color: var(--ink-white);
+    font: inherit;
+    font-size: 0.95rem;
+    transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+    outline: none;
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(45,187,152,0.18);
+}
+.field .error { color: var(--ember-red); font-size: 0.85rem; }
+.field input[aria-invalid="true"],
+.field select[aria-invalid="true"] { border-color: var(--ember-red); }
+
+.field-hint { font-size: 0.8rem; color: var(--ink-mute); }
+.field-hint-success { color: var(--teal); }
+
+.password-row { display: flex; gap: 8px; align-items: stretch; }
+.password-row input { flex: 1 1 auto; min-width: 0; }
+.btn-inline { padding: 0 14px; font-size: 0.85rem; flex: 0 0 auto; }
+
+.checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--ink-white);
+    font-size: 0.95rem;
+}
+.checkbox input { accent-color: var(--teal); width: 18px; height: 18px; }
+
+/* ---------- Buttons ---------- */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    font: inherit;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 120ms ease, color 120ms ease, transform 50ms ease;
+}
+.btn-primary {
+    background: var(--teal);
+    color: var(--forest-deep);
+}
+.btn-primary:hover  { background: var(--teal-deep); }
+.btn-primary:active { transform: translateY(1px); }
+.btn-primary[disabled] { background: var(--surface-tint); color: var(--ink-dim); cursor: not-allowed; }
+.btn-secondary {
+    background: transparent;
+    color: var(--ink-white);
+    border-color: var(--surface-tint);
+}
+.btn-secondary:hover { background: var(--surface-tint); }
+
+.actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 24px;
+}
+.actions .right { margin-left: auto; }
+
+/* ---------- Banners (info / fail / success) ---------- */
+
+.banner {
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    margin: 0 0 18px;
+    border: 1px solid;
+    font-size: 0.9rem;
+}
+.banner-fail    { background: rgba(217,60,47,0.10);  border-color: rgba(217,60,47,0.45);  color: #fcb2a8; }
+.banner-info    { background: rgba(45,187,152,0.10); border-color: rgba(45,187,152,0.45); color: var(--ink-white); }
+.banner-success { background: rgba(45,187,152,0.16); border-color: var(--teal);            color: var(--ink-white); }
+
+/* ---------- Summary list ---------- */
+
+.summary {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 8px 16px;
+    margin: 0 0 18px;
+    padding: 14px 16px;
+    background: rgba(0,0,0,0.18);
+    border-radius: var(--radius-sm);
+}
+.summary dt { color: var(--ink-mute); font-size: 0.85rem; align-self: center; }
+.summary dd { margin: 0; color: var(--ink-white); font-family: var(--font-mono); font-size: 0.9rem; word-break: break-word; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 540px) {
+    .install-shell { padding: 28px 16px 24px; }
+    .install-card  { padding: 24px 20px; }
+    .field-row.cols-2 { grid-template-columns: 1fr; }
+    .install-progress li label { display: none; }
+}
