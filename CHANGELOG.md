@@ -4,6 +4,110 @@ All notable changes to Bird CMS are documented here. Format is loosely based on
 [Keep a Changelog](https://keepachangelog.com/), versioning follows
 [SemVer](https://semver.org/).
 
+## [3.1.5] - 2026-05-12
+
+Hotfix: remove install-guard auto-redirects.
+
+### Fixed
+
+- `public/admin/index.php` and `public/index.php` no longer redirect to
+  `/install` when `storage/installed.lock` is missing. On sites migrated
+  from earlier releases the lock was never created, so every `/admin`
+  visit produced a 302 to `/install` — which on production installs
+  resolves to 404 because the in-browser wizard is intentionally not
+  part of those installs. `bootstrap.php`'s APP_KEY refuse-to-boot check
+  remains as the fail-loud safety net for genuinely unconfigured installs.
+
+## [3.1.4] - 2026-05-12
+
+Tooling and docs cleanup; no engine behaviour change.
+
+### Changed
+
+- Renamed `tests/legacy/` → `tests/standalone/`. The three files in there
+  (`ContentRouterTest`, `RateLimitTest`, `SchemaLayerTest`) are the only
+  coverage for `App\Http\ContentRouter`, `App\Support\RateLimit`, and
+  the AEO/Schema layer (#1706) — `tests/Unit/` covers none of them. The
+  "legacy" label was misleading; they're intentional standalone tests
+  following the shell smoke-test convention, not deletable tech debt.
+- Documented in `bootstrap.php` why the `topic-wise-secret-key-change-me`
+  sentinel is intentional in the APP_KEY refuse-list (project was
+  previously named topic-wise; the sentinel catches old installs that
+  carried that default).
+
+## [3.1.3] - 2026-05-12
+
+De-Bird the default tailwind theme footer.
+
+### Fixed
+
+- Restored slate-950 footer baseline in `themes/tailwind/partials/footer.php`.
+  The lean-3.0 cycle (commits `ac0fab9` and `f5fca0d`) had baked Bird CMS
+  brand hex codes directly into the default footer: `#0a2520`
+  forest-green background, `#f3c33b` sun-gold link-hover, `#2dbb98` mint
+  category dots, `#1c5a52` teal border, `#7cdcc4` mint headings, `#f8f6f3`
+  cream text, `#94a89f` muted green. Every tenant inherited the palette
+  regardless of their own brand. Replaced with `bg-slate-950 text-slate-200`
+  + Tailwind brand-utility gradient that picks up whatever indigo `brand-*`
+  tokens are configured per site. Logo image-mode opt-in
+  (`config('site.branding.logo_image')`) from v3.1.1 preserved.
+
+## [3.1.2] - 2026-05-12
+
+Remove Bird marketing hero from default home page.
+
+### Fixed
+
+- The default `themes/tailwind/views/home.php` opened with a full-screen
+  Bird CMS brand-intro hero: animated polygonal hummingbird (via
+  `marketing/bird-animation` partial), rainbow brand-shimmer wordmark,
+  `/welcome` eyebrow, fallback tagline "Polygonal hummingbird,
+  forest-deep, sun-warm." That was authored as `bird-cms-brand.html` for
+  README/screen-capture material and didn't belong in the default theme
+  that tenants inherit. Replaced with a brand-agnostic intro:
+  `<h1>site_name</h1>` + tagline (no fake-bird fallback) + single
+  Subscribe CTA. Sites can override the entire top by adding
+  `content/pages/home.md` (rendered as `$intro` just below).
+- `themes/tailwind/partials/marketing/bird-animation.php` and the
+  `brand-shimmer` / `hero-bird-*` / `hero-cta-*` CSS classes remain in
+  the codebase as opt-in marketing primitives.
+
+## [3.1.1] - 2026-05-12
+
+De-Bird the default tailwind theme header, footer logo, and brand css.
+
+### Fixed
+
+- `themes/tailwind/partials/header.php` and `footer.php`: hardcoded
+  `<img src="/assets/brand/bird-logo.svg">` replaced with a config-driven
+  fallback. If `config('site.branding.logo_image')` is set, render the
+  image; otherwise fall back to the pre-rebrand text-initials block
+  (which has no asset dependency and therefore cannot 404).
+- `themes/tailwind/layouts/base.php`: dropped the hardcoded
+  `<link rel="icon" type="image/svg+xml" href="/assets/brand/bird-logo.svg" />`.
+  Sites already declare per-site favicons via `/favicon.svg` and
+  `/favicon.ico`. Also: emit `<link rel="stylesheet">` for
+  `/assets/frontend/brand.css` and `site.css` only when the files
+  actually exist on disk; emitting broken links produced 404s on every
+  tenant that never shipped its own brand stylesheet.
+
+### Changed
+
+- `themes/tailwind/theme.json`: renamed `name` from `"Bird"` to
+  `"Default"`; clarified that the default theme is brand-agnostic and
+  per-site branding is wired through
+  `config('site.branding.logo_image')` and
+  `public/assets/frontend/brand.css`.
+
+### Background
+
+Commit `5bf0488` (lean-3.0 cycle, 2026-04-28) baked Bird CMS brand
+assets straight into the default tailwind theme, so every tenant on
+`ACTIVE_THEME=tailwind` got a broken `<img src="/assets/brand/bird-logo.svg">`
+in the header and broken `brand.css` / `site.css` link references.
+v3.1.1, v3.1.2, and v3.1.3 together restore brand-neutral defaults.
+Bird CMS's own marketing site is a static landing page and is unaffected.
+
 ## [3.1.0-rc.10] - 2026-05-11
 
 Dashboard becomes useful, in-admin docs viewer ships.
