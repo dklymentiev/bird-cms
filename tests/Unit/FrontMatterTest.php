@@ -102,4 +102,20 @@ final class FrontMatterTest extends TestCase
 
         self::assertSame($original, $back);
     }
+
+    /** Bug 5 (v3.1.8): quoted list-item containing `: ` must NOT be re-parsed as a map. */
+    public function testQuotedListItemWithColonStaysString(): void
+    {
+        $original = ["paragraphs" => [
+            "Everyone has seen the demo: ask an AI agent to book a flight.",
+            "Another: with colon inside.",
+            "Plain string no colon",
+            "URL inline: https://example.com/path",
+        ]];
+
+        $yaml = FrontMatter::encode($original);
+        $back = FrontMatter::parse($yaml);
+
+        self::assertSame($original, $back);
+    }
 }

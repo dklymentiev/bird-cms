@@ -4,6 +4,40 @@ All notable changes to Bird CMS are documented here. Format is loosely based on
 [Keep a Changelog](https://keepachangelog.com/), versioning follows
 [SemVer](https://semver.org/).
 
+## [3.1.8] - 2026-05-13
+
+Hotfix: quoted list-items with embedded `: ` no longer corrupt on parse.
+
+### Fixed
+
+- `FrontMatter::parseLines` previously treated any list-item value
+  containing `:` (other than URLs with `http`) as an inline map. A line
+  like
+  ```
+  - "Everyone has seen the demo: ask an AI agent to book a flight."
+  ```
+  was parsed as `{"Everyone has seen the demo": "ask an AI agent..."}`,
+  silently turning a string list into a list of one-element maps. v3.1.7
+  encoded this content correctly, but READ-side parsing lost the shape
+  on the next save. New guard via `isQuotedListItem` skips the colon-as-
+  map interpretation when the value is wrapped in matching `"..."` or
+  `'...'` quotes. Found by klim.expert services migration round-trip
+  test (4 of 7 services were silently corrupting paragraph arrays).
+
+### Added
+
+- `tests/Unit/FrontMatterTest::testQuotedListItemWithColonStaysString`
+  — covers four shapes: colon-mid-string, colon-at-start, plain string
+  without colon, and inline URL.
+
+### Notes
+
+Sites already on v3.1.7 inherit the fix via the engine symlink swap.
+This bug never corrupted existing YAML files: parsing was wrong on
+v3.1.7, but until a SAVE round-trip went through the admin path the
+file on disk was untouched. After this fix, klim.expert services
+migration (Task #1855) is safe to complete.
+
 ## [3.1.7] - 2026-05-13
 
 Hotfix wave: close the FrontMatter encoder bugs that v3.1.6's READ-side fix

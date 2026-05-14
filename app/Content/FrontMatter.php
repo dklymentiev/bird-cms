@@ -91,7 +91,7 @@ final class FrontMatter
                     self::parseLines($lines, $childStart, $childEnd, $indent, $childResult);
                     $result[] = $childResult;
                     $i = $childEnd;
-                } elseif (str_contains($value, ':') && !str_contains($value, 'http')) {
+                } elseif (str_contains($value, ':') && !str_contains($value, 'http') && !self::isQuotedListItem($value)) {
                     // Check if there's more content below at higher indent
                     if ($childStart < $childEnd && isset($lines[$childStart])) {
                         $nextIndent = strspn($lines[$childStart], ' ');
@@ -380,4 +380,22 @@ final class FrontMatter
         }
         return true;
     }
+
+    /**
+     * Whether a list-item value is a YAML-quoted scalar.
+     *
+     * Used to keep strings like `- "title: subtitle"` as plain strings rather
+     * than re-interpreting them as `{title: subtitle}` map items.
+     */
+    private static function isQuotedListItem(string $value): bool
+    {
+        if (strlen($value) < 2) {
+            return false;
+        }
+        $first = $value[0];
+        $last  = $value[strlen($value) - 1];
+        return ($first === '"' && $last === '"')
+            || ($first === "'" && $last === "'");
+    }
+
 }
