@@ -4,6 +4,51 @@ All notable changes to Bird CMS are documented here. Format is loosely based on
 [Keep a Changelog](https://keepachangelog.com/), versioning follows
 [SemVer](https://semver.org/).
 
+## [3.1.9] - 2026-05-13
+
+Add a structural integrity validator (`scripts/doctor.php`) plus a small
+parser hardening that surfaced while building it.
+
+### Added
+
+- `scripts/doctor.php` — site integrity validator. Three modes:
+  - `--quick` (~1s): directory skeleton, .env file present, engine
+    symlink resolves, `config/app.php` parses, required config keys set.
+  - default (~10s): adds theme directory check, frontmatter parse of
+    every `.md` and `.meta.yaml` under `content/`, categories/dirs
+    cross-reference.
+  - `--deep` (~60s): adds HTTP smoke on `site_url` and `/admin/`.
+- Exit codes: 0 OK, 1 warnings, 2 critical. Use these to gate destructive
+  agent operations (`mv`, `rm`, mass migrations) — refuse to proceed
+  if doctor exits 2.
+- `--json` flag for machine-readable output. Includes per-check
+  `section`, `status`, `name`, and `detail`.
+- `DOCTOR_VERSION` constant (currently `1.0`) shown in the report header
+  alongside the engine version, so a stored report tells you exactly
+  which check-set applied. Bump when adding/removing/changing checks.
+- Built-in minimal `.env` reader so `$env(...)` lookups inside
+  `config/app.php` resolve correctly without booting the full engine.
+
+### Validator findings on existing 6 prod sites (baseline)
+
+- topic-wise / klymentiev / klim.expert / cleaninggta:
+  `public/index.php` is a real file, not a symlink. WARN-level drift —
+  engine updates do NOT auto-propagate to that entrypoint. Re-symlink
+  to `../engine/public/index.php` to fix.
+- klymentiev: orphan `content/articles/resources/` not in categories.php.
+- cleaninggta: 13 categories registered in `config/categories.php` have
+  no matching `content/articles/<slug>/` dir — content lives under
+  `content/services/`, `content/content/` instead. Site-specific layout
+  drift; not engine-breakage.
+- husky-cleaning.biz, bird-cms.com: landing-only sites, no
+  `config/categories.php` (expected).
+
+### Notes
+
+Doctor lives in the engine bundle; each site runs the doctor matching
+its own engine version. To gate cross-site operations on the same
+spec, run doctor from the latest engine source explicitly.
+
 ## [3.1.8] - 2026-05-13
 
 Hotfix: quoted list-items with embedded `: ` no longer corrupt on parse.
