@@ -58,9 +58,9 @@ export BIRD_SITES="/server/sites/topic-wise.com \
                    /server/sites/cleaninggta.com \
                    /server/sites/klymentiev.com \
                    /server/sites/klim.expert \
-                   /server/sites/husky.generic-app.com \
+                   /server/sites/husky-cleaning.biz \
                    /server/sites/bird-cms.com"
-export BIRD_CANARY="/server/sites/husky.generic-app.com"
+export BIRD_CANARY="/server/sites/husky-cleaning.biz"
 ```
 
 Set these once in `~/.bashrc` (or `/etc/environment` if you want them

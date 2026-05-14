@@ -4,6 +4,42 @@ All notable changes to Bird CMS are documented here. Format is loosely based on
 [Keep a Changelog](https://keepachangelog.com/), versioning follows
 [SemVer](https://semver.org/).
 
+## [3.2.1] - 2026-05-14
+
+Docs: two new site-pattern recipes + agent-facing pointer in the main
+README. No engine code changes.
+
+### Added
+
+- `docs/recipes/services-catalog.md` — narrative walkthrough for a
+  22-service site with two subcategories (`/<division>/<slug>`
+  URL grammar). Built on `ServiceRepository` (already shipped in
+  engine), no custom code required beyond config + theme views.
+  Case material: cleaninggta.com.
+- `docs/recipes/portfolio.md` — narrative walkthrough for a flat
+  portfolio site with current/past split (`/projects/<slug>` URL
+  grammar). Built on `ProjectRepository` (already shipped), config +
+  two theme views. Case material: klymentiev.com.
+
+### Changed
+
+- `README.md`: `docs/recipes/` bullet now explicitly directs
+  agents to read recipes first when starting work on a Bird CMS
+  site. The intent is to short-circuit the recurring "how do I
+  organize services / projects / products on this site?" loop by
+  pointing at canonical examples before any new architecture gets
+  invented.
+- `docs/recipes/README.md`: re-ordered walkthroughs by complexity,
+  added "Agents start here" callout, added a "Coming soon"
+  section flagging product-catalog and personal-site (composition)
+  as known gaps.
+
+### Notes
+
+- Engine version is unchanged from 3.2.0; this is a docs-only patch
+  release shipped to keep doc state and site state in lockstep on
+  the standardized 6-site fleet.
+
 ## [3.2.0] - 2026-05-14
 
 Finish the two-level article URL grammar the router scaffolded back in

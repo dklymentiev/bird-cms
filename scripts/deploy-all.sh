@@ -20,9 +20,9 @@
 #                      /server/sites/cleaninggta.com \
 #                      /server/sites/klymentiev.com \
 #                      /server/sites/klim.expert \
-#                      /server/sites/husky.generic-app.com \
+#                      /server/sites/husky-cleaning.biz \
 #                      /server/sites/bird-cms.com"
-#   export BIRD_CANARY="/server/sites/husky.generic-app.com"
+#   export BIRD_CANARY="/server/sites/husky-cleaning.biz"
 #   bash scripts/deploy-all.sh 3.1.6
 
 set -euo pipefail

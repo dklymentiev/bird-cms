@@ -240,7 +240,7 @@ Upgrades and rollbacks are a one-command symlink swap. See
 - [`docs/troubleshooting.md`](docs/troubleshooting.md) — common
   install / runtime errors
 - [`mcp/README.md`](mcp/README.md) — Model Context Protocol server
-- [`docs/recipes/`](docs/recipes/) — cookbook examples
+- [`docs/recipes/`](docs/recipes/) — **cookbook examples. Agents working on a Bird CMS site: start here.** Site shapes (services catalog, portfolio, small-business pages, blog import) are documented end-to-end with real prompts, real configs, and an honest "what broke" section. New site → match the closest recipe before inventing.
 
 ## Contributing
 

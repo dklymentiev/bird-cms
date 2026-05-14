@@ -62,6 +62,10 @@ audit/reports/
 # ==============================================================================
 releases/
 
+# Release-build workspace (sha256 MANIFEST staged here by build-release.sh
+# before tar; regenerated every build, never committed).
+.release/
+
 # scripts/backup.sh default output dir
 backups/
 
