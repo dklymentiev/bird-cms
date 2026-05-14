@@ -306,7 +306,7 @@ final class Dispatcher
         //     repository's invalidation hook (which knows the URL it just
         //     wrote) can call HtmlCache::forget() with the same key.
         $articleSegments = ArticleController::resolveSegments($segments, $this->articlesPrefix);
-        if ($articleSegments !== null && count($articleSegments) === 2) {
+        if ($articleSegments !== null && (count($articleSegments) === 2 || count($articleSegments) === 3)) {
             $this->withCache($cacheKey, $cacheEligible, function () use ($articleSegments, $query) {
                 (new ArticleController(
                     $this->articles,

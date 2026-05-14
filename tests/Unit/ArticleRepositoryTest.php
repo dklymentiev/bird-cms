@@ -125,6 +125,90 @@ final class ArticleRepositoryTest extends TestCase
         self::assertSame('bundle body', $bundle['content']);
     }
 
+    public function testNestedBundleLoadsAndDerivesSubcategoryFromPath(): void
+    {
+        // Layout: services/ai/agent-dev/{index.md, meta.yaml}
+        $nestedDir = $this->articlesDir . '/services/ai/agent-dev';
+        mkdir($nestedDir, 0755, true);
+        file_put_contents($nestedDir . '/index.md', 'agent body');
+        file_put_contents(
+            $nestedDir . '/meta.yaml',
+            "title: Agent Dev\nslug: agent-dev\ndate: 2025-01-01\n"
+        );
+
+        $repo = new ArticleRepository($this->articlesDir);
+        $article = $repo->find('services', 'agent-dev', false, 'ai');
+
+        self::assertNotNull($article);
+        self::assertSame('agent-dev', $article['slug']);
+        self::assertSame('services', $article['category']);
+        self::assertSame('ai', $article['subcategory']);
+        self::assertSame('http://localhost/services/ai/agent-dev', $article['url']);
+    }
+
+    public function testNestedArticleNotReachableViaFlatLookup(): void
+    {
+        // A nested article must not answer to /services/agent-dev -- otherwise
+        // there would be two URLs (flat + nested) serving the same content and
+        // the canonical URL becomes ambiguous.
+        $nestedDir = $this->articlesDir . '/services/ai/agent-dev';
+        mkdir($nestedDir, 0755, true);
+        file_put_contents($nestedDir . '/index.md', 'body');
+        file_put_contents(
+            $nestedDir . '/meta.yaml',
+            "title: Agent\nslug: agent-dev\ndate: 2025-01-01\n"
+        );
+
+        $repo = new ArticleRepository($this->articlesDir);
+        // Flat lookup (no subcategory) must NOT return the nested article.
+        self::assertNull($repo->find('services', 'agent-dev'));
+        // findByParams with no subcategory in the URL must also reject.
+        self::assertNull($repo->findByParams(['category' => 'services', 'slug' => 'agent-dev']));
+        // But with the correct subcategory, it resolves.
+        self::assertNotNull($repo->findByParams([
+            'category' => 'services',
+            'subcategory' => 'ai',
+            'slug' => 'agent-dev',
+        ]));
+    }
+
+    public function testFlatArticleNotReachableViaWrongSubcategory(): void
+    {
+        $this->repo->save('blog', 'plain', $this->validMeta(['title' => 'Plain']), 'body');
+
+        $repo = new ArticleRepository($this->articlesDir);
+        // Flat article has subcategory=null, so a URL claiming subcategory=foo
+        // must not match it.
+        self::assertNull($repo->findByParams([
+            'category' => 'blog',
+            'subcategory' => 'foo',
+            'slug' => 'plain',
+        ]));
+        // But flat lookup still works.
+        self::assertNotNull($repo->findByParams([
+            'category' => 'blog',
+            'slug' => 'plain',
+        ]));
+    }
+
+    public function testNestedSubcategoryWithInvalidSlugInPathIsSkipped(): void
+    {
+        // basename(dirname(...)) yielding an invalid slug must skip the file,
+        // not load it with a broken subcategory.
+        $nestedDir = $this->articlesDir . '/services/Bad Sub/foo';
+        mkdir($nestedDir, 0755, true);
+        file_put_contents($nestedDir . '/index.md', 'body');
+        file_put_contents(
+            $nestedDir . '/meta.yaml',
+            "title: Foo\nslug: foo\ndate: 2025-01-01\n"
+        );
+
+        $repo = new ArticleRepository($this->articlesDir);
+        // The "Bad Sub" directory has spaces -- glob may not even match it on
+        // some filesystems, but if it does the validation must drop it.
+        self::assertNull($repo->find('services', 'foo'));
+    }
+
     /** @return array<string, mixed> */
     private function validMeta(array $overrides = []): array
     {

@@ -17,11 +17,11 @@ declare(strict_types=1);
 
 return [
     'types' => [
-        // Blog articles: /category/article-slug
+        // Blog articles: /category/article-slug, optionally /category/subcategory/article-slug
         'articles' => [
             'source' => 'content/articles',
             'format' => 'markdown',
-            'url' => '/{category}/{slug}',
+            'url' => '/{category}/{subcategory?}/{slug}',
             'repository' => \App\Content\ArticleRepository::class,
             'view' => 'article',
             'sitemap' => [

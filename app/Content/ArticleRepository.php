@@ -80,17 +80,32 @@ final class ArticleRepository implements ContentRepositoryInterface
         ));
     }
 
-    public function find(string $category, string $slug, bool $includeDrafts = false): ?array
+    public function find(string $category, string $slug, bool $includeDrafts = false, ?string $subcategory = null): ?array
     {
         if (!$this->isValidSlug($category) || !$this->isValidSlug($slug)) {
+            return null;
+        }
+        if ($subcategory !== null && !$this->isValidSlug($subcategory)) {
             return null;
         }
 
         $articles = $this->getCategoryArticles($category, $includeDrafts);
         foreach ($articles as $article) {
-            if ($article['slug'] === $slug) {
-                return $article;
+            if ($article['slug'] !== $slug) {
+                continue;
             }
+            $articleSub = $article['subcategory'] ?? null;
+            // URL without subcategory must not reach a nested article -- a
+            // /services/agent-dev request should 404 if the article actually
+            // lives at /services/ai/agent-dev. Forces a canonical URL per
+            // article instead of two paths to the same content.
+            if ($subcategory === null && !empty($articleSub)) {
+                continue;
+            }
+            if ($subcategory !== null && $articleSub !== $subcategory) {
+                continue;
+            }
+            return $article;
         }
 
         return null;
@@ -103,7 +118,14 @@ final class ArticleRepository implements ContentRepositoryInterface
         if ($category === '' || $slug === '') {
             return null;
         }
-        return $this->find($category, $slug);
+        $subcategory = $params['subcategory'] ?? null;
+        if ($subcategory !== null) {
+            $subcategory = (string) $subcategory;
+            if ($subcategory === '') {
+                $subcategory = null;
+            }
+        }
+        return $this->find($category, $slug, false, $subcategory);
     }
 
     /**
@@ -429,6 +451,20 @@ final class ArticleRepository implements ContentRepositoryInterface
                 }
             }
 
+            // 3. Scan for nested-bundle structure: category/subcategory/slug/index.md.
+            //    Capped at one level of nesting -- /{category}/{subcategory?}/{slug}
+            //    is the router's URL grammar; deeper layouts have nowhere to be
+            //    addressed and would only invite ambiguity (slug collision across
+            //    subcategories, breadcrumb sprawl). Subcategory is derived from
+            //    the directory name; any meta.subcategory in the file is
+            //    overridden to keep filesystem and routing in lockstep.
+            foreach (glob($categoryDir . '/*/*/index.md') as $file) {
+                $article = $this->mapBundleArticle($file, $category, /* nested */ true);
+                if ($article !== null && ($includeDrafts || $this->isPublished($article))) {
+                    $articles[] = $article;
+                }
+            }
+
             usort($articles, static fn($a, $b) => strtotime($b['date'] ?? '1970-01-01') <=> strtotime($a['date'] ?? '1970-01-01'));
 
             return $articles;
@@ -467,11 +503,17 @@ final class ArticleRepository implements ContentRepositoryInterface
             $articleCategory = $category;
         }
 
-        $canonicalUrl = self::buildUrl($articleCategory, $slug);
-
         // Subcategory is optional. Null (not "general") so URL builders
         // can drop the segment from /{category}/{subcategory?}/{slug}.
-        $subcategory = $meta['subcategory'] ?? null;
+        // Flat articles take subcategory only from meta -- there is no
+        // directory hint to override with.
+        $subcategoryMeta = $meta['subcategory'] ?? null;
+        $subcategory = ($subcategoryMeta !== null && $this->isValidSlug((string) $subcategoryMeta))
+            ? (string) $subcategoryMeta
+            : null;
+
+        $canonicalUrl = self::buildUrl($articleCategory, $slug, $subcategory);
+
         $type = $meta['type'] ?? 'insight';
         $featured = self::toBool($meta['featured'] ?? false);
         $trending = self::toBool($meta['trending'] ?? false);
@@ -520,15 +562,28 @@ final class ArticleRepository implements ContentRepositoryInterface
     }
 
     /**
-     * Map a bundle article (category/slug/index.md structure)
+     * Map a bundle article (category/slug/index.md structure).
+     *
+     * $nested switches to category/subcategory/slug/index.md layout: the
+     * extra path segment is treated as the subcategory and overrides any
+     * meta.subcategory in the file (filesystem is source of truth, so a
+     * mismatch can't silently desync the URL from the on-disk location).
      */
-    private function mapBundleArticle(string $indexPath, string $category): ?array
+    private function mapBundleArticle(string $indexPath, string $category, bool $nested = false): ?array
     {
         $bundlePath = dirname($indexPath);
         $slug = basename($bundlePath);
 
         if (!$this->isValidSlug($slug)) {
             return null;
+        }
+
+        $subcategoryFromPath = null;
+        if ($nested) {
+            $subcategoryFromPath = basename(dirname($bundlePath));
+            if (!$this->isValidSlug($subcategoryFromPath)) {
+                return null;
+            }
         }
 
         $contents = file_get_contents($indexPath);
@@ -558,11 +613,17 @@ final class ArticleRepository implements ContentRepositoryInterface
             $articleCategory = $category;
         }
 
-        $canonicalUrl = self::buildUrl($articleCategory, $slug);
+        if ($nested) {
+            $subcategory = $subcategoryFromPath;
+        } else {
+            $subcategoryMeta = $meta['subcategory'] ?? null;
+            $subcategory = ($subcategoryMeta !== null && $this->isValidSlug((string) $subcategoryMeta))
+                ? (string) $subcategoryMeta
+                : null;
+        }
 
-        // Subcategory is optional. Null (not "general") so URL builders
-        // can drop the segment from /{category}/{subcategory?}/{slug}.
-        $subcategory = $meta['subcategory'] ?? null;
+        $canonicalUrl = self::buildUrl($articleCategory, $slug, $subcategory);
+
         $type = $meta['type'] ?? 'insight';
         $featured = self::toBool($meta['featured'] ?? false);
         $trending = self::toBool($meta['trending'] ?? false);
@@ -718,13 +779,17 @@ final class ArticleRepository implements ContentRepositoryInterface
         return $result;
     }
 
-    private static function buildUrl(string $category, string $slug): string
+    private static function buildUrl(string $category, string $slug, ?string $subcategory = null): string
     {
         $category = trim($category, '/');
         $slug = trim($slug, '/');
 
         $siteUrl = \config('site_url') ?: throw new \RuntimeException('site_url not configured');
-        return rtrim((string) $siteUrl, '/') . '/' . $category . '/' . $slug;
+        $base = rtrim((string) $siteUrl, '/') . '/' . $category;
+        if ($subcategory !== null && $subcategory !== '') {
+            $base .= '/' . trim($subcategory, '/');
+        }
+        return $base . '/' . $slug;
     }
 
     private static function toBool(mixed $value): bool

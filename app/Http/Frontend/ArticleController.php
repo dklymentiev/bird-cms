@@ -57,49 +57,71 @@ final class ArticleController
      * Resolve the article segments from the full URI segments, honoring
      * the optional `articles_prefix` config (e.g. /blog/<category>/<slug>).
      *
-     * Returns null when the segment shape doesn't match an article URL
-     * for this site's configuration — caller falls through to 404.
+     * Accepts both the legacy [category, slug] shape and the nested
+     * [category, subcategory, slug] shape. Returns null when neither
+     * matches -- caller falls through to 404.
      *
      * @param list<string> $segments
-     * @return list<string>|null
+     * @return list<string>|null  2 or 3 elements: [category, slug] or
+     *                            [category, subcategory, slug]
      */
     public static function resolveSegments(array $segments, string $articlesPrefix): ?array
     {
         if ($articlesPrefix !== '') {
-            // Prefix required: only /<prefix>/<category>/<slug> matches.
+            // Prefix required: /<prefix>/<category>/<slug> or
+            // /<prefix>/<category>/<subcategory>/<slug>.
             if (count($segments) >= 3 && $segments[0] === $articlesPrefix) {
-                return array_slice($segments, 1);
+                $stripped = array_slice($segments, 1);
+                if (count($stripped) === 2 || count($stripped) === 3) {
+                    return $stripped;
+                }
             }
             return null;
         }
-        return $segments;
+        if (count($segments) === 2 || count($segments) === 3) {
+            return $segments;
+        }
+        return null;
     }
 
     /**
-     * @param list<string>          $articleSegments  [category, slug]
+     * @param list<string>          $articleSegments  [category, slug] or
+     *                                                [category, subcategory, slug]
      * @param array<string, mixed>  $query  $_GET-shaped (for ?preview=1)
      */
     public function handle(array $articleSegments, array $query): void
     {
-        $category = $articleSegments[0];
-        $slug = $articleSegments[1];
-        if (preg_match('/^[a-z0-9-]+$/', $category) !== 1
-            || preg_match('/^[a-z0-9-]+$/', $slug) !== 1) {
+        if (count($articleSegments) === 3) {
+            [$category, $subcategory, $slug] = $articleSegments;
+        } else {
+            $category = $articleSegments[0];
+            $subcategory = null;
+            $slug = $articleSegments[1];
+        }
+        $slugRegex = '/^[a-z0-9-]+$/';
+        if (preg_match($slugRegex, $category) !== 1
+            || preg_match($slugRegex, $slug) !== 1
+            || ($subcategory !== null && preg_match($slugRegex, $subcategory) !== 1)) {
             $this->renderNotFound($category, $slug);
             return;
         }
 
-        // Draft visibility: payload is "<category>/<slug>".
+        // Draft visibility: payload mirrors the URL path so nested and flat
+        // articles get different preview tokens (preserves canonical-URL
+        // discipline -- a nested article isn't previewable via a flat URL).
+        $previewPayload = $subcategory !== null
+            ? $category . '/' . $subcategory . '/' . $slug
+            : $category . '/' . $slug;
         $isPreview = false;
         if (isset($query['preview']) && (string) $query['preview'] === '1') {
             $isPreview = PreviewToken::verify(
-                $category . '/' . $slug,
+                $previewPayload,
                 (string) ($query['token'] ?? ''),
                 (int) ($query['expires'] ?? 0),
             );
         }
 
-        $article = $this->articles->find($category, $slug, $isPreview);
+        $article = $this->articles->find($category, $slug, $isPreview, $subcategory);
         if ($article === null) {
             $this->renderNotFound($category, $slug);
             return;

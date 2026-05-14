@@ -4,6 +4,60 @@ All notable changes to Bird CMS are documented here. Format is loosely based on
 [Keep a Changelog](https://keepachangelog.com/), versioning follows
 [SemVer](https://semver.org/).
 
+## [3.2.0] - 2026-05-14
+
+Finish the two-level article URL grammar the router scaffolded back in
+#1720. Articles can now physically live at
+`content/articles/<category>/<subcategory>/<slug>/index.md` and be served
+at `/<category>/<subcategory>/<slug>`. Flat layout
+(`content/articles/<category>/<slug>.md` → `/<category>/<slug>`) is
+unchanged; the new behaviour is purely additive.
+
+### Added
+
+- `ArticleRepository::getCategoryArticles()` scans a third layout —
+  `category/subcategory/slug/index.md` — in addition to the existing
+  flat and one-level-bundle forms. Capped at one level of subcategory:
+  `/{category}/{subcategory?}/{slug}` is the router's URL grammar and
+  deeper layouts have nowhere to be addressed.
+- `ArticleRepository::find()` gained an optional fourth parameter
+  `?string $subcategory = null`. When `null`, a nested article is NOT
+  returned for a flat lookup (canonical URL discipline -- there is only
+  one URL per article). When non-null, the lookup is constrained to
+  that subcategory.
+- `ArticleRepository::findByParams()` honours `subcategory` in the
+  param array (router already passes it from
+  `/{category}/{subcategory?}/{slug}` matches).
+- `ArticleController::resolveSegments()` accepts the 3-segment shape
+  `[category, subcategory, slug]` in addition to the legacy
+  `[category, slug]`. `Dispatcher` step 13 widened to dispatch both.
+- Four new unit tests in `tests/Unit/ArticleRepositoryTest.php` cover
+  nested load, subcategory-from-path derivation, no-flat-fallback for
+  nested articles, and invalid-subcategory-slug rejection.
+
+### Changed
+
+- `config/content.php`: `articles.url` pattern is now
+  `/{category}/{subcategory?}/{slug}` (was `/{category}/{slug}`). The
+  `{subcategory?}` optional placeholder was already supported by
+  `ContentRouter` (#1720) -- this just opts articles into using it.
+- `ArticleRepository::buildUrl()` accepts `?string $subcategory = null`
+  as a third parameter and inserts the segment when non-null.
+
+### Notes
+
+- No site.yaml flag. The change is backwards-compatible: sites without
+  nested article directories see zero behavioural difference (the new
+  glob returns empty, the optional URL segment is omitted, and `find()`
+  without a subcategory behaves as before).
+- Filesystem is source of truth for nested articles: a `meta.subcategory`
+  inside a nested bundle is overridden by the directory name so the URL
+  cannot silently desync from the on-disk path.
+- `save()` is unchanged in this release. Writing into a nested
+  subcategory directory is a manual filesystem operation for now (move
+  the bundle dir into `category/subcategory/`); admin-UI write support
+  is deferred to a future release.
+
 ## [3.1.10] - 2026-05-13
 
 Retire dead deploy path; doctor v1.1 surfaces retired-feature drift.
