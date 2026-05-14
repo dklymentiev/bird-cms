@@ -32,7 +32,7 @@ declare(strict_types=1);
  * engine will run an older doctor — read the version from the report
  * to know which spec was applied.
  */
-const DOCTOR_VERSION = '1.0';
+const DOCTOR_VERSION = '1.1';
 
 $mode = 'medium';
 $jsonOut = false;
@@ -303,14 +303,43 @@ if (!is_file($catFile)) {
 }
 if (!$jsonOut) echo "\n";
 
+// ====================== Section 6: Retired engine features ===============
+$sec = '6. retired';
+if (!$jsonOut) echo "[6] Retired engine features (should be absent or quarantined)\n";
+// Each entry: site-dir name => brief reason.
+$retired = [
+    'monitoring'           => 'SEO tooling retired in OSS-strip 2026-04-28 (engine commit 2e69a8b)',
+    'content-optimization' => 'optimizer retired in lean-3.0 cycle 2026-05-02 (engine commit 29eaae1)',
+];
+$found = false;
+foreach ($retired as $dir => $reason) {
+    $path = $site . '/' . $dir;
+    if (is_dir($path)) {
+        $size = trim((string) @shell_exec('du -sh ' . escapeshellarg($path) . ' 2>/dev/null | cut -f1'));
+        warn($sec, "$dir/ present", "$reason. Quarantine to /backup/ or remove. (size: $size)");
+        $found = true;
+    } else {
+        ok($sec, "$dir/ absent");
+    }
+}
+// docs/ is trickier: engine has its own docs/ (OSS docs). A site docs/ with
+// alpha-era MIGRATION-PLAN-2025-12.md is an orphan; a fresh docs/ that just
+// mirrors engine OSS docs is also drift. Heuristic: warn if the marker file
+// from alpha era is present.
+$alphaDocMarker = $site . '/docs/MIGRATION-PLAN-2025-12.md';
+if (is_file($alphaDocMarker)) {
+    warn($sec, 'docs/ contains alpha-era orphans', 'docs/MIGRATION-PLAN-2025-12.md present — likely quarantine candidate');
+}
+if (!$jsonOut) echo "\n";
+
 if ($mode === 'medium') {
     require __DIR__ . '/doctor-summary.inc.php';
     exit($failed > 0 ? 2 : ($warned > 0 ? 1 : 0));
 }
 
-// ====================== Section 6: HTTP smoke (deep) =====================
-$sec = '6. http-smoke';
-if (!$jsonOut) echo "[6] HTTP smoke (deep)\n";
+// ====================== Section 7: HTTP smoke (deep) =====================
+$sec = '7. http-smoke';
+if (!$jsonOut) echo "[7] HTTP smoke (deep)\n";
 if (is_array($config) && isset($config['site_url'])) {
     $base = rtrim($config['site_url'], '/');
     foreach (['/', '/admin/'] as $path) {

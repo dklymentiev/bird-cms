@@ -4,6 +4,46 @@ All notable changes to Bird CMS are documented here. Format is loosely based on
 [Keep a Changelog](https://keepachangelog.com/), versioning follows
 [SemVer](https://semver.org/).
 
+## [3.1.10] - 2026-05-13
+
+Retire dead deploy path; doctor v1.1 surfaces retired-feature drift.
+
+### Removed
+
+- `scripts/update-engine.sh` reduced to a retirement stub. The script
+  implemented the pre-versioned, copy-based deploy (file-by-file
+  `cp -r` of `app/`, `bootstrap.php`, `themes/admin/`, etc. into the
+  site dir). The current path uses `scripts/update.sh` which extracts
+  a release archive into `versions/X.Y.Z/` and atomically flips the
+  `engine` symlink. The old script also referenced engine directories
+  that no longer exist (`monitoring/` retired in `2e69a8b` 2026-04-28,
+  `content-optimization/` retired in `29eaae1` 2026-05-02); its `cp`
+  lines had been silent no-ops for several releases. The stub still
+  exits non-zero with a pointer to `update.sh` / `deploy-all.sh` so
+  muscle-memory users get a clear redirect instead of "command not
+  found".
+
+### Changed
+
+- `DOCTOR_VERSION` bumped 1.0 -> 1.1.
+- New section 6 in `scripts/doctor.php`: **retired engine features**.
+  Warns when `monitoring/` or `content-optimization/` exist at the
+  site root, or when `docs/MIGRATION-PLAN-2025-12.md` is present
+  (alpha-era doc orphan marker). HTTP smoke (was section 6) is now
+  section 7 under `--deep`.
+
+### Validator findings on remaining "fat" sites
+
+After running v1.1 doctor across all six prod sites:
+- klymentiev.com: section 6 clean (Agent #2 quarantined those dirs in
+  Task #1858, 2026-05-13).
+- cleaninggta.com, klim.expert, topic-wise.com: still carrying
+  `monitoring/` (616K-856K) and `content-optimization/` (32K-740K)
+  plus alpha-era `docs/` orphans. WARN level — no impact on uptime,
+  but a clear quarantine target for site-specific hygiene work.
+- husky-cleaning.biz, bird-cms.com: clean (predate the retired
+  features).
+
 ## [3.1.9] - 2026-05-13
 
 Add a structural integrity validator (`scripts/doctor.php`) plus a small
