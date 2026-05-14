@@ -32,7 +32,7 @@ declare(strict_types=1);
  * engine will run an older doctor — read the version from the report
  * to know which spec was applied.
  */
-const DOCTOR_VERSION = '1.1';
+const DOCTOR_VERSION = '1.2';
 
 $mode = 'medium';
 $jsonOut = false;
@@ -332,14 +332,132 @@ if (is_file($alphaDocMarker)) {
 }
 if (!$jsonOut) echo "\n";
 
+// ====================== Section 7: Engine integrity (manifest) ===========
+// Verifies installed engine files against the sha256 manifest shipped in
+// the release. Catches in-place edits to engine/ files (e.g. an agent
+// "fixed a bug" in engine/src/Foo.php directly instead of opening a PR).
+// Missing manifest = engine pre-dates v3.1.11 — non-fatal, just info.
+$sec = '7. engine integrity';
+if (!$jsonOut) echo "[7] Engine integrity (sha256 vs MANIFEST)\n";
+$engineRoot = $engineTarget !== false ? $engineTarget : $site . '/engine';
+$manifestPath = $engineRoot . '/.release/MANIFEST.sha256';
+if (!is_file($manifestPath)) {
+    warn($sec, 'engine MANIFEST.sha256 missing',
+        'engine pre-dates v3.1.11. update-engine.sh to a manifest-bearing release to enable drift detection.');
+} else {
+    $manifestLines = file($manifestPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
+    $manifestVersion = '';
+    $entries = [];
+    foreach ($manifestLines as $line) {
+        if ($line === '' || $line[0] === '#') {
+            if (preg_match('/^#\s*version:\s*(\S+)/i', $line, $m)) {
+                $manifestVersion = $m[1];
+            }
+            continue;
+        }
+        if (!preg_match('/^([a-f0-9]{64})\s+(.+)$/', $line, $m)) continue;
+        $entries[$m[2]] = $m[1];
+    }
+    if ($manifestVersion !== '' && $manifestVersion !== $engineVersion) {
+        warn($sec, "manifest version $manifestVersion != installed $engineVersion",
+            'engine VERSION file and MANIFEST disagree — incomplete update?');
+    }
+    $checked = 0;
+    $mismatched = [];
+    $missing = [];
+    foreach ($entries as $relPath => $expectedSha) {
+        $absPath = $engineRoot . '/' . $relPath;
+        if (!is_file($absPath)) { $missing[] = $relPath; continue; }
+        $actual = @hash_file('sha256', $absPath);
+        if ($actual !== $expectedSha) $mismatched[] = $relPath;
+        $checked++;
+    }
+    if ($checked === 0) {
+        warn($sec, 'manifest empty', 'no file entries parsed from MANIFEST');
+    } elseif (!$mismatched && !$missing) {
+        ok($sec, "$checked engine files match release MANIFEST");
+    } else {
+        if ($mismatched) {
+            $sample = implode(', ', array_slice($mismatched, 0, 3));
+            $extra = count($mismatched) > 3 ? ' (+' . (count($mismatched) - 3) . ' more)' : '';
+            fail($sec, count($mismatched) . ' engine files edited post-install',
+                "$sample$extra. Restore via update-engine.sh or commit the change upstream.");
+        }
+        if ($missing) {
+            $sample = implode(', ', array_slice($missing, 0, 3));
+            $extra = count($missing) > 3 ? ' (+' . (count($missing) - 3) . ' more)' : '';
+            fail($sec, count($missing) . ' engine files missing on disk',
+                "$sample$extra. update-engine.sh to restore.");
+        }
+    }
+}
+if (!$jsonOut) echo "\n";
+
+// ====================== Section 8: Instructions (CLAUDE.md) ==============
+// Checks that the site has an agent instructions file documenting which
+// paths are editable. Also parses "## Intentional divergence: <path>"
+// headings and reclassifies any earlier WARNs about those paths to INFO
+// — the divergence is acknowledged and expected.
+$sec = '8. instructions';
+if (!$jsonOut) echo "[8] Instructions (CLAUDE.md)\n";
+$claudeFile = $site . '/CLAUDE.md';
+if (!is_file($claudeFile)) {
+    warn($sec, 'CLAUDE.md missing',
+        'create from templates/CLAUDE.md.template — agents need edit boundaries');
+} else {
+    ok($sec, 'CLAUDE.md present');
+    $claudeContent = (string) file_get_contents($claudeFile);
+    if (str_contains($claudeContent, '/server/sites/cms-engine/')) {
+        warn($sec, 'CLAUDE.md references dead /server/sites/cms-engine/ path',
+            'engine moved to /server/scripts/bird-cms/ (OSS-strip 2026-04-28). Update CLAUDE.md.');
+    }
+    // Parse "## Intentional divergence: <thing>" headings to a list of
+    // allowed-drift identifiers. Path is taken from backticks if present,
+    // otherwise the rest of the heading line.
+    $allowedDrift = [];
+    if (preg_match_all('/##\s+Intentional divergence:\s*([^\n]+)/i', $claudeContent, $mm)) {
+        foreach ($mm[1] as $line) {
+            $line = trim($line);
+            if (preg_match('/`([^`]+)`/', $line, $bm)) {
+                $allowedDrift[] = trim($bm[1]);
+            } elseif ($line !== '') {
+                $allowedDrift[] = $line;
+            }
+        }
+    }
+    if ($allowedDrift) {
+        ok($sec, 'intentional divergence declared: ' . implode(', ', $allowedDrift));
+        // Reclassify matching prior WARNs to INFO. We mutate $results
+        // directly and decrement $warned.
+        foreach ($results as &$r) {
+            if (($r['status'] ?? '') !== 'warn') continue;
+            foreach ($allowedDrift as $path) {
+                if (str_contains($r['name'] ?? '', $path)) {
+                    $r['status'] = 'info';
+                    $r['allowed_divergence'] = true;
+                    $warned--;
+                    // Re-emit the WARN line as INFO in human output. The
+                    // earlier line was already printed; we add a tail note.
+                    if (!$jsonOut) {
+                        echo "  [INFO] reclassified WARN '" . ($r['name']) . "' -> intentional divergence\n";
+                    }
+                    break;
+                }
+            }
+        }
+        unset($r);
+    }
+}
+if (!$jsonOut) echo "\n";
+
 if ($mode === 'medium') {
     require __DIR__ . '/doctor-summary.inc.php';
     exit($failed > 0 ? 2 : ($warned > 0 ? 1 : 0));
 }
 
-// ====================== Section 7: HTTP smoke (deep) =====================
-$sec = '7. http-smoke';
-if (!$jsonOut) echo "[7] HTTP smoke (deep)\n";
+// ====================== Section 9: HTTP smoke (deep) =====================
+$sec = '9. http-smoke';
+if (!$jsonOut) echo "[9] HTTP smoke (deep)\n";
 if (is_array($config) && isset($config['site_url'])) {
     $base = rtrim($config['site_url'], '/');
     foreach (['/', '/admin/'] as $path) {

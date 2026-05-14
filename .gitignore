@@ -112,3 +112,7 @@ docker-compose.override.yml
 
 # Design prototype for bird-cms.com -- live site has its own repo / admin.
 landing/
+
+# Standardization templates ARE part of the release — exempt from generic
+# CLAUDE.md.template ignore above.
+!templates/CLAUDE.md.template

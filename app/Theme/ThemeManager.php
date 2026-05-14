@@ -45,7 +45,21 @@ final class ThemeManager
     {
         $viewPath = $this->path('views/' . $view . '.php');
         if (!file_exists($viewPath)) {
-            throw new InvalidArgumentException("View '{$view}' not found for theme '{$this->activeTheme}'");
+            // Engine-bundled fallback: when the active theme is missing
+            // a view (e.g. `search`, `category`), try the canonical
+            // engine `tailwind` theme. This keeps standard routes from
+            // 500ing on themes that forgot to ship every view, while
+            // letting any theme override by providing its own file.
+            // The site layout (base.php) still wraps the fallback content,
+            // so site chrome (header/footer/nav) remains theme-styled.
+            $fallback = defined('ENGINE_THEMES_PATH')
+                ? rtrim(ENGINE_THEMES_PATH, '/') . '/tailwind/views/' . $view . '.php'
+                : null;
+            if ($fallback !== null && file_exists($fallback) && $this->activeTheme !== 'tailwind') {
+                $viewPath = $fallback;
+            } else {
+                throw new InvalidArgumentException("View '{$view}' not found for theme '{$this->activeTheme}'");
+            }
         }
 
         $layoutPath = $layout ? $this->path($layout) : $this->path('layouts/base.php');

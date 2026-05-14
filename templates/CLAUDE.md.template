@@ -1,0 +1,124 @@
+# {{SITE_NAME}} — Claude Instructions
+
+Site managed by **Bird CMS** (engine at `/server/scripts/bird-cms/`).
+Engine docs: `engine/README.md` and `https://gitlab.com/codimcc/bird-cms`.
+
+> This file tells Claude (and any AI agent) what is safe to edit on this site,
+> what must never be touched, and which checks to run before/after changes.
+> Edit the **Site-specific** section freely. The boundaries and workflow above
+> it are the same across all Bird CMS sites and updated by `update-engine.sh`.
+
+---
+
+## Edit boundaries
+
+### Editable (site-owned, your changes persist across engine updates)
+
+```
+config/                  # app.php, categories.php, authors.php
+content/                 # articles, pages — site's actual content
+themes/<own-theme>/      # site-local theme fork
+public/assets/           # site-specific images, fonts, etc. (NOT brand/)
+storage/leads/           # form submissions
+storage/analytics/       # visits.db
+worklog/                 # task logs, session notes (this site's history)
+.env                     # secrets, per-site overrides
+docker-compose.yml       # container layout
+```
+
+### Read-only (engine territory — managed by release, NEVER edit in place)
+
+```
+engine/                  # symlink → versions/<version>/  — the CMS engine
+versions/                # extracted release archives
+vendor/                  # composer-managed dependencies
+public/index.php         # symlink → engine/public/index.php
+public/admin/            # symlink → engine/public/admin/
+public/api/              # symlink → engine/public/api/
+public/assets/brand/     # symlinks to engine brand assets
+```
+
+If you need to change engine behaviour:
+1. Open a PR in `/server/scripts/bird-cms/` (the source repo).
+2. Cut a new release.
+3. Run `engine/scripts/update-engine.sh` on this site to pull it in.
+
+**Never** patch a file under `engine/` directly. `doctor.php` will detect the
+drift (sha256 vs MANIFEST.sha256), and the next `update-engine.sh` will silently
+overwrite your edit anyway.
+
+---
+
+## Workflow
+
+### Pre-edit (mandatory before non-trivial changes)
+
+```bash
+cd /server/sites/{{DOMAIN}}
+engine/scripts/doctor.php --quick       # baseline state — should be green
+git status                              # see what's already uncommitted
+# If git is not initialized:
+engine/scripts/backup.sh . /backup/{{DOMAIN}}-pre-edit-$(date +%F).tar.gz
+```
+
+### Post-edit
+
+```bash
+engine/scripts/site-audit.php           # content + links + meta
+engine/scripts/doctor.php               # diff vs baseline
+git add . && git commit -m "..."        # or backup.sh again if no git
+```
+
+### Weekly
+
+```bash
+engine/scripts/check-update.sh          # is there a newer engine release on GitHub?
+```
+
+---
+
+## Common commands
+
+```bash
+# Container lifecycle
+docker compose up -d
+docker compose restart
+
+# Pull latest engine release (after `check-update.sh` shows a new version)
+/server/scripts/bird-cms/scripts/update-engine.sh /server/sites/{{DOMAIN}}
+
+# Full audit (deep)
+engine/scripts/doctor.php --deep /server/sites/{{DOMAIN}}
+
+# Parse access logs into analytics
+docker exec {{CONTAINER}} php /var/www/html/engine/scripts/parse-access-log.php
+```
+
+---
+
+## Site-specific (edit this section freely)
+
+### Info
+
+- **Domain:** {{DOMAIN}}
+- **Container:** {{CONTAINER}}
+- **Niche:** _(describe site purpose)_
+- **Active theme:** _(check `config/app.php` → `active_theme`)_
+- **Categories:** _(check `config/categories.php`)_
+
+### Content structure
+
+_(Describe site-specific layout under `content/`)_
+
+### Current focus
+
+_(Or link to `worklog/SESSION.md`)_
+
+### Notes for future agents
+
+_(Anything site-specific worth remembering — odd routing, custom themes,
+client contact details, deployment quirks)_
+
+---
+
+_Template version: 2026-05-13. Replaced via `scripts/update-engine.sh`._

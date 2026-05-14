@@ -31,6 +31,48 @@ echo "Version: $VERSION"
 echo "Archive: $ARCHIVE"
 echo
 
+# Generate release manifest: sha256 of every file that will end up inside
+# the tar. Doctor section 7 verifies installed engine files against this
+# manifest to detect post-install edits (e.g. an agent patched
+# engine/src/Foo.php directly instead of opening a PR).
+echo "Generating release manifest..."
+MANIFEST_DIR="$REPO_DIR/.release"
+mkdir -p "$MANIFEST_DIR"
+MANIFEST="$MANIFEST_DIR/MANIFEST.sha256"
+{
+    echo "# Bird CMS release manifest"
+    echo "# version: $VERSION"
+    echo "# generated: $(date -u +%FT%TZ)"
+    echo "# format: <sha256>  <path-relative-to-engine-root>"
+} > "$MANIFEST"
+# Same exclusions as the tar below. .release/ is included (the manifest
+# itself is excluded by name to avoid the chicken-and-egg).
+( cd "$REPO_DIR" && find . -type f \
+    -not -path './releases/*' \
+    -not -path './.git/*' \
+    -not -path './vendor/*' \
+    -not -path './node_modules/*' \
+    -not -path './storage/*' \
+    -not -path './content/*' \
+    -not -path './uploads/*' \
+    -not -name '.env' \
+    -not -name '.env.local' \
+    -not -name '*.pre-*-fix-*' \
+    -not -name '*.pre-rewrite' \
+    -not -name '*.pre-mit-switch' \
+    -not -name '*.bak' \
+    -not -name '*~' \
+    -not -name '*.swp' \
+    -not -name '.DS_Store' \
+    -not -path './.release/MANIFEST.sha256' \
+    -print0 \
+  | sort -z \
+  | xargs -0 sha256sum \
+  | sed 's|  \./|  |' \
+  >> "$MANIFEST" )
+echo "Manifest: $(grep -c '^[a-f0-9]' "$MANIFEST") files -> $MANIFEST"
+echo
+
 # Build the archive. Excludes everything that's not engine code:
 #  - releases/        (we're writing into it)
 #  - .git/            (history is not part of a release)
@@ -40,6 +82,7 @@ echo
 #  - .env             (per-site secrets)
 #  - .pre-*           (in-place patch backups, not engine)
 #  - *.bak, *~        (editor artifacts)
+# .release/MANIFEST.sha256 IS included — it's the integrity reference.
 echo "Tarring engine..."
 tar czf "$ARCHIVE" \
     -C "$REPO_DIR" \
