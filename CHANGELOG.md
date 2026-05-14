@@ -4,6 +4,69 @@ All notable changes to Bird CMS are documented here. Format is loosely based on
 [Keep a Changelog](https://keepachangelog.com/), versioning follows
 [SemVer](https://semver.org/).
 
+## [3.1.7] - 2026-05-13
+
+Hotfix wave: close the FrontMatter encoder bugs that v3.1.6's READ-side fix
+exposed, restore themed 404 on sites with local themes, and ship a saner
+installer template.
+
+### Fixed
+
+- `FrontMatter::escapeScalar` no longer uses `addslashes`; YAML
+  double-quoted strings now escape only `\` and `"`. Single quotes pass
+  through unchanged, ending the per-save accumulation of `\` on any
+  string with an apostrophe + structural char (e.g. `Don't: read`).
+- `FrontMatter::escapeScalar` quotes numeric-looking strings (`"01"`,
+  `"007"`, `"1e10"`), YAML keyword strings (`"true"`, `"null"`, `"yes"`),
+  strings starting with whitespace or YAML indicators, and strings with
+  leading/trailing whitespace. Previously these emitted bare and were
+  re-cast on the next read.
+- `FrontMatter::castValue` preserves YAML-quoted scalars as strings (no
+  coercion to int/bool/null). `step: "01"` now round-trips as the string
+  `"01"`, not int `1`.
+- `FrontMatter::encodeLevel` handles nested arrays / maps inside list-of-
+  objects entries. Previously a structure like
+  ```
+  stack:
+    - name: backend
+      items: ["PHP", "MySQL"]
+  ```
+  fell through to `(string) $array`, emitting the literal word `Array`
+  and silently destroying the nested data. The nested-array branch now
+  renders the sub-list at one extra indent so the parser can disambiguate.
+- `Admin\Controller::enforceIpRestriction` now resolves the themed 404
+  view via `config('themes_path')` rather than `dirname(__DIR__, 2)`.
+  Sites whose theme lives under `<site>/themes/<name>/` (cleaninggta,
+  klymentiev, klim.expert, topic-wise) now serve their stylised 404
+  page to unauthorized admin visitors instead of a giveaway plain-text
+  "404 Not Found".
+
+### Changed
+
+- `scripts/install-site.sh` defaults `themes_path` in the generated
+  `config/app.php` to `__DIR__ . '/../themes'` (site-local) instead of
+  `ENGINE_THEMES_PATH`. The previous default coupled every new site's
+  visual identity to the engine's bundled tailwind theme, surfacing as
+  a surprise redesign on every engine upgrade.
+- `scripts/install-site.sh` symlinks
+  `public/assets/brand/{bird-logo.svg,hero-glow.webp}` from the engine
+  bundle and copies the default tailwind theme into `themes/tailwind/`.
+  Fresh sites render the admin panel and a working default theme out
+  of the box without manual scaffolding.
+
+### Added
+
+- `tests/Unit/FrontMatterTest.php` — round-trip coverage for the four
+  encoder bug classes above, plus a flat-document smoke test.
+
+### Notes for site operators
+
+Existing sites already on v3.1.6 inherit the fixes via the engine
+symlink swap; no `.env` or `config/` changes required. Sites that were
+manually patched between v3.1.0 and v3.1.7 (themes_path overrides,
+brand asset symlinks) keep their overrides — the installer change only
+affects newly created sites.
+
 ## [3.1.6] - 2026-05-12
 
 Hotfix: close silent-data-loss on nested fields in article meta.yaml.

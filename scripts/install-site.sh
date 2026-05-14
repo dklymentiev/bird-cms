@@ -111,6 +111,20 @@ echo "  public/index.php  -> engine/public/index.php"
 echo "  public/admin/     -> engine/public/admin/"
 echo "  public/api/       -> engine/public/api/"
 
+# Brand assets used by the admin theme (bird-logo, hero-glow). Symlink them
+# from the engine bundle so theme upgrades pick up new artwork automatically.
+mkdir -p "$TARGET/public/assets/brand"
+ln -sfn ../../../engine/public/assets/brand/bird-logo.svg  "$TARGET/public/assets/brand/bird-logo.svg"
+ln -sfn ../../../engine/public/assets/brand/hero-glow.webp "$TARGET/public/assets/brand/hero-glow.webp"
+echo "  public/assets/brand/{bird-logo.svg,hero-glow.webp} -> engine/public/assets/brand/"
+
+# Default tailwind theme: copy engine-bundled theme so the site's themes_path
+# (which now points at the site-local themes/ dir) finds a renderable theme
+# out of the box. Operators can fork or replace it without affecting other sites.
+mkdir -p "$TARGET/themes"
+cp -a "$TARGET/versions/$VERSION/themes/tailwind" "$TARGET/themes/tailwind"
+echo "  themes/tailwind/  copied from engine bundle (site-local from day one)"
+
 # Minimal site config — bootstrap requires config/app.php to load Config::boot.
 cat > "$TARGET/config/app.php" <<EOF
 <?php
@@ -123,7 +137,7 @@ return [
     'site_url'     => \$env('SITE_URL')     ?? 'https://$DOMAIN',
     'timezone'     => \$env('TIMEZONE')     ?? 'UTC',
     'active_theme' => \$env('ACTIVE_THEME') ?? 'tailwind',
-    'themes_path'  => ENGINE_THEMES_PATH,
+    'themes_path'  => __DIR__ . '/../themes',
     'content_dir'  => SITE_CONTENT_PATH,
     'articles_dir' => SITE_CONTENT_PATH . '/articles',
     'cache_dir'    => SITE_STORAGE_PATH . '/cache',

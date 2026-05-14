@@ -214,7 +214,37 @@ final class FrontMatter
                             $yaml .= sprintf("%s  -", $indent);
                             $first = true;
                             foreach ($item as $itemKey => $itemVal) {
-                                if ($first) {
+                                if (is_array($itemVal)) {
+                                    // Nested array/map inside a list-of-objects entry.
+                                    if ($first) {
+                                        $yaml .= sprintf(" %s:\n", $itemKey);
+                                        $first = false;
+                                    } else {
+                                        $yaml .= sprintf("%s    %s:\n", $indent, $itemKey);
+                                    }
+                                    if (self::isSequential($itemVal)) {
+                                        foreach ($itemVal as $sub) {
+                                            if (is_array($sub)) {
+                                                $yaml .= sprintf("%s      -", $indent);
+                                                $subFirst = true;
+                                                foreach ($sub as $sk => $sv) {
+                                                    if ($subFirst) {
+                                                        $yaml .= sprintf(" %s: %s\n", $sk, self::escapeScalar($sv));
+                                                        $subFirst = false;
+                                                    } else {
+                                                        $yaml .= sprintf("%s          %s: %s\n", $indent, $sk, self::escapeScalar($sv));
+                                                    }
+                                                }
+                                            } else {
+                                                $yaml .= sprintf("%s      - %s\n", $indent, self::escapeScalar($sub));
+                                            }
+                                        }
+                                    } else {
+                                        foreach ($itemVal as $sk => $sv) {
+                                            $yaml .= sprintf("%s      %s: %s\n", $indent, $sk, self::escapeScalar($sv));
+                                        }
+                                    }
+                                } else if ($first) {
                                     $yaml .= sprintf(" %s: %s\n", $itemKey, self::escapeScalar($itemVal));
                                     $first = false;
                                 } else {
@@ -242,15 +272,37 @@ final class FrontMatter
         if (is_bool($value)) {
             return $value ? 'true' : 'false';
         }
-        if (is_numeric($value)) {
+        if ($value === null) {
+            return 'null';
+        }
+        // Cast only genuine int/float PHP scalars. String values that *look*
+        // numeric (e.g. "01", "007", "1e10") must stay strings; emitting them
+        // unquoted lets parse() coerce them on next read.
+        if (is_int($value) || is_float($value)) {
             return (string) $value;
         }
-
         $string = (string) $value;
-        if (preg_match('/[:#\-\n]/', $string) || $string === '') {
-            return '"' . addslashes($string) . '"';
+        if ($string === '') {
+            return '""';
         }
-
+        $needsQuote = preg_match('/[:#\n\t]/', $string)
+            || preg_match('/^[\s\-\'\"!&*?{}\[\],%@`>|]/', $string)
+            || preg_match('/\s$/', $string)
+            || is_numeric($string)
+            || preg_match('/^(?:true|false|null|yes|no|on|off|~)$/i', $string);
+        if ($needsQuote) {
+            // YAML double-quoted form: only \ and " need escaping. Single
+            // quotes pass through unchanged — PHP addslashes was wrong and
+            // accumulated backslashes on every save.
+            $escaped = strtr($string, [
+                '\\' => '\\\\',
+                '"'  => '\\"',
+                "\n" => '\\n',
+                "\t" => '\\t',
+                "\r" => '\\r',
+            ]);
+            return '"' . $escaped . '"';
+        }
         return $string;
     }
 
@@ -273,7 +325,26 @@ final class FrontMatter
 
     private static function castValue(string $value): mixed
     {
-        $value = trim($value, " \"'");
+        $value = trim($value);
+        // YAML-quoted scalars: keep as string, never coerce. Strip the quote
+        // pair, unescape; this preserves "01", "007", "true" (the string), etc.
+        if (strlen($value) >= 2) {
+            $first = $value[0];
+            $last  = $value[strlen($value) - 1];
+            if (($first === '"' && $last === '"') || ($first === "'" && $last === "'")) {
+                $inner = substr($value, 1, -1);
+                if ($first === '"') {
+                    $inner = strtr($inner, [
+                        '\\\\' => '\\',
+                        '\\"'  => '"',
+                        '\\n'  => "\n",
+                        '\\t'  => "\t",
+                        '\\r'  => "\r",
+                    ]);
+                }
+                return $inner;
+            }
+        }
 
         if (strtolower($value) === 'true') {
             return true;

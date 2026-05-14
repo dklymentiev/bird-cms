@@ -41,7 +41,7 @@ abstract class Controller
             http_response_code(404);
 
             // Try to render site's 404 page, fallback to plain text
-            $themesPath = dirname(__DIR__, 2) . '/themes';
+            $themesPath = config('themes_path') ?: dirname(__DIR__, 2) . '/themes';
             $activeTheme = config('active_theme');
             $notFoundView = $activeTheme ? $themesPath . '/' . $activeTheme . '/views/404.php' : null;
 
